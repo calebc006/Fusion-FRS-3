@@ -22,11 +22,14 @@
 
 ### SimpliFRy
 - [x] Reuse similar backend to InteractiveFR
-- [ ] Port over UI changes (perf-logging), rework init page logic, implement holding_time
+- [x] Port over UI changes, rework init page logic, implement holding_time
+- [ ] Port over perf log
 - [ ] Reliability and performance testing
 - [ ] Update docs
+- [ ] ibpng warning: iCCP: known incorrect sRGB profile (during png decode)
 
 ### Gotendance
+- [ ] Confirm that we aren't dropping any detections, even with high update interval
 - [ ] Auto import namelist file, use full path
 - [ ] Manual marking overrules automatic detection
 - [ ] Update docs

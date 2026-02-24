@@ -61,6 +61,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                     restart.message ||
                         "Stream not started. Please start from Home.",
                 );
+                localStorage.setItem("initialized", false);        
                 return (window.location.href = "/");
             }
         }
@@ -84,6 +85,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         initReferencesUI({ autoLoad: true });
     } catch {
         alert("Unable to connect to server.");
+        localStorage.setItem("initialized", false);    
         window.location.href = "/";
     }
 });

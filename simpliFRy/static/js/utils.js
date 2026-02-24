@@ -260,3 +260,17 @@ export const fetchStreamStatus = async () => {
     const response = await fetch("/api/status");
     return response.json();
 };
+
+export async function fetchSettings() {
+    try { 
+        const response = await fetch("/api/get_settings"); 
+        if (!response.ok) { 
+            throw new Error(`HTTP error! Status: ${response.status}`); 
+        } 
+        const jsonData = await response.json();  
+        return jsonData; 
+    } catch (error) { 
+        console.error("Error fetching JSON:", error); 
+        return null;
+    } 
+}

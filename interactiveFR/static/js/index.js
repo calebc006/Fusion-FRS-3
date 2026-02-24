@@ -1,7 +1,3 @@
-import {
-    waitForStream,
-} from "./utils.js";
-
 const customRTSP = document.getElementById("stream_src_custom");
 const cameraSelect = document.getElementById("camera_device_select");
 const form = document.getElementById("init");
@@ -12,14 +8,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     form.style.display = "flex";
     postInit.style.display = "none";
 
-    waitForStream({attempts: 10, delayMs: 50}).then(status => {
-        console.log(status)
-        if (status.stream_state === "running") {
-            form.style.display = "none";
-            postInit.style.display = "flex";
-            streamUrlDisplay.innerText = localStorage.getItem("streamSrc");
-        } 
-    })
+    // Check if initialized
+    if (localStorage.getItem("initialized") === "true") {
+        // Hide form and show post-init menu 
+        form.style.display = "none";
+        postInit.style.display = "flex";
+        streamUrlDisplay.innerText = localStorage.getItem("streamSrc");
+    }
 });
 
 const endStreamAndReload = async () => {
@@ -28,6 +23,7 @@ const endStreamAndReload = async () => {
     } catch {}
 
     localStorage.removeItem("streamSrc");
+    localStorage.setItem("initialized", false);
     location.reload();
 };
 
@@ -108,13 +104,13 @@ document.getElementById("init").onsubmit = async (event) => {
         }
         
         // Success! Redirect
-        form.style.display = "none";
-        postInit.style.display = "flex";
+        localStorage.setItem("initialized", true);
         window.location.href = "/interactive";
 
     } catch (error) {
         loading.remove();
         submitButton.style.display = "block";
+        localStorage.setItem("initialized", false);
         console.log(error);
         alert(`Error loading stream from ${streamSrc}. ${error.message} Please reset and try again.`);
     }

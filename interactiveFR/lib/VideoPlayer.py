@@ -86,7 +86,7 @@ class VideoSource:
                 "ffmpeg",
 
                 # Hardware acceleration
-                "-hwaccel", "auto",
+                # "-hwaccel", "auto",
 
                 # Low-latency RTSP settings
                 "-rtsp_transport", "tcp",
@@ -97,7 +97,7 @@ class VideoSource:
                 # Must be BEFORE -i
                 "-probesize", "32",
                 "-analyzeduration", "0",
-                "-thread_queue_size", "8",
+                "-thread_queue_size", "512",
 
                 "-i", src,
 

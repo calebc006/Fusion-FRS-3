@@ -1,28 +1,21 @@
-import { waitForStream } from "./utils.js";
-
 const customInput = document.getElementById("stream_src_custom");
 const form = document.getElementById("init");
-const infoMenu = document.getElementById("info-menu");
+const postInitMenu = document.getElementById("info-menu");
 let namelistPath = null;
 
 window.addEventListener("DOMContentLoaded", async () => {
-    fetch("/api/status")
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.stream_state === "running") {
-                // Hide form and show post-init menu 
-                form.style.display = "none";
-                infoMenu.style.display = "flex";
-                document.getElementById("stream-url").textContent = localStorage.getItem("streamSrc") || "N/A";
-                document.getElementById("namelist-path").textContent = localStorage.getItem("namelistPath") || "N/A";
-            } 
-            else {
-                // Hide post-init menu and show form
-                infoMenu.style.display = "none";
-                form.style.display = "flex"
-            }
-        })
-        .catch((error) => console.log(error));
+    // Show form and hide post-init menu
+    postInitMenu.style.display = "none";
+    form.style.display = "flex";
+
+    // Check if initialized
+    if (localStorage.getItem("initialized") === "true") {
+        // Hide form and show post-init menu 
+        form.style.display = "none";
+        postInitMenu.style.display = "flex";
+        document.getElementById("stream-url").textContent = localStorage.getItem("streamSrc") || "N/A";
+        document.getElementById("namelist-path").textContent = localStorage.getItem("namelistPath") || "N/A";
+    }
 });
 
 
@@ -86,37 +79,27 @@ document.getElementById("init").onsubmit = async (event) => {
         
         if (!data.inference) {
             loading.remove();
-            submitButton.style.display = "block"
+            submitButton.style.display = "block";
 
             alert(data.message || "Failed to start FR");
             return;
         }
 
-        // Check that stream has started
-        loading.start("Verifying stream");
-        const status = await waitForStream();
-        
-        loading.remove();
+        // Success! 
+        // Hide form, loader and show post-init menu 
         submitButton.style.display = "block";
+        form.style.display = "none";
+        postInitMenu.style.display = "flex";
+        document.getElementById("stream-url").textContent = localStorage.getItem("streamSrc") || "N/A";
+        document.getElementById("namelist-path").textContent = localStorage.getItem("namelistPath") || "N/A";
 
-        if (status.stream_state !== "running") {
-            alert(
-                status.last_error
-                    ? `Stream failed (${status.stream_state}): ${status.last_error}`
-                    : `Stream failed (${status.stream_state}). Please check your source and try again.`,
-                );
-        } else {
-            // Hide form, loader and show post-init menu 
-            form.style.display = "none";
-            infoMenu.style.display = "flex";
-            document.getElementById("stream-url").textContent = localStorage.getItem("streamSrc") || "N/A";
-            document.getElementById("namelist-path").textContent = localStorage.getItem("namelistPath") || "N/A";
-        }
+        localStorage.setItem("initialized", true);
 
     } catch (error) {
         console.log(error)
         loading.remove();
         submitButton.style.display = "block"
+        localStorage.setItem("initialized", false);
 
         alert(`Error loading stream from ${streamSrc}. Please reset and try again.`);
     }
@@ -268,6 +251,7 @@ document
     .getElementById("reset-button")
     .addEventListener("click", async (event) => {
         event.preventDefault();
+        localStorage.setItem("initialized", false);
 
         fetch("/api/end", {
             method: "POST",
