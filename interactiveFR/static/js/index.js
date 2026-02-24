@@ -4,15 +4,22 @@ import {
 
 const customRTSP = document.getElementById("stream_src_custom");
 const cameraSelect = document.getElementById("camera_device_select");
+const form = document.getElementById("init");
+const postInit = document.getElementById("post-init");
+const streamUrlDisplay = document.getElementById("stream-url");
 
 window.addEventListener("DOMContentLoaded", async () => {
-    try {
-        if (localStorage.getItem("streamSrc") != null) {
-            window.location.href = "/interactive";
-        }
-    } catch (error) {
-        console.log(error);
-    }
+    form.style.display = "flex";
+    postInit.style.display = "none";
+
+    waitForStream({attempts: 10, delayMs: 50}).then(status => {
+        console.log(status)
+        if (status.stream_state === "running") {
+            form.style.display = "none";
+            postInit.style.display = "flex";
+            streamUrlDisplay.innerText = localStorage.getItem("streamSrc");
+        } 
+    })
 });
 
 const endStreamAndReload = async () => {
@@ -55,7 +62,6 @@ const resolveStreamSource = () => {
 document.getElementById("init").onsubmit = async (event) => {
     event.preventDefault();
 
-    const form = event.target;
     const submitButton = document.getElementById("submit-button");
 
     const streamSrc = resolveStreamSource();
@@ -100,28 +106,17 @@ document.getElementById("init").onsubmit = async (event) => {
             alert(data.message || "Failed to start FR");
             return;
         }
-
-        // Check that stream has started
-        loading.start("Verifying stream");
-        const status = await waitForStream();
         
+        // Success! Redirect
+        form.style.display = "none";
+        postInit.style.display = "flex";
+        window.location.href = "/interactive";
+
+    } catch (error) {
         loading.remove();
         submitButton.style.display = "block";
-        if (status.stream_state === "running") {
-            window.location.href = "/interactive";
-        } else {
-            alert(
-                status.last_error
-                    ? `Stream failed (${status.stream_state}): ${status.last_error}`
-                    : `Stream failed (${status.stream_state}). Please check your source and try again.`,
-            );
-        }
-
-    } catch {
-        loading.remove();
-        submitButton.style.display = "block"
-
-        alert(`Error loading stream from ${streamSrc}. Please reset and try again.`);
+        console.log(error);
+        alert(`Error loading stream from ${streamSrc}. ${error.message} Please reset and try again.`);
     }
 };
 
