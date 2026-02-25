@@ -10,3 +10,5 @@ data/
 # Embeddings cache and database
 Embeddings.db
 embeddings_cache.json
+
+__pycache__/
