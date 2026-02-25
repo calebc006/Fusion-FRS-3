@@ -26,15 +26,16 @@
 - [ ] Port over perf log
 - [ ] Reliability and performance testing
 - [ ] Update docs
-- [ ] ibpng warning: iCCP: known incorrect sRGB profile (during png decode)
 
 ### Gotendance
-- [ ] Confirm that we aren't dropping any detections, even with high update interval
+- [x] Confirm that we aren't dropping any detections, even with high update interval
 - [ ] Auto import namelist file, use full path
 - [ ] Manual marking overrules automatic detection
 - [ ] Update docs
 
 ## Future
+- [ ] Convert all thresholds to cosine *similarity* (higher = better match)
+- [ ] Implement TLS (https) for safer multi-location implementation
 - [ ] Two separate FFMPEG processes for RAW and MJPEG streams
 - [ ] Lazy loading for reference images
-- [ ] Implement TLS (https) for safer multi-location implementation
+- [ ] ibpng warning: iCCP: known incorrect sRGB profile (warning during png decode)
