@@ -180,10 +180,8 @@ body {
 .table-detection-list {
     position: absolute;
     top: 25vh;
-    left: 62vw;
-    width: 30vw;
-    padding-left: 10px;
-    padding-right: 10px;
+    right: 50px;
+    width: 40vw;
 }
 
 .table-detection-element {

@@ -33,7 +33,6 @@ window.addEventListener("DOMContentLoaded", async () => {
         loadNamelistJSON(namelistPath).then((data) => {
             namelistJSON = data;
             console.log("loaded namelist")
-            console.log(namelistJSON)
         });
     }
 
@@ -180,7 +179,7 @@ const updateDetections = (data) => {
     detectionList.replaceChildren(...detections);
 
     // Update country flag based on top detection
-    const topDetection = detections[0]?.label;
+    const topDetection = detections[0]?.innerText;
     if (topDetection)
         updateCountryFlag(topDetection);
 };

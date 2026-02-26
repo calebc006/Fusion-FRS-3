@@ -7,11 +7,11 @@ body {
 .container {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
     position: absolute;
     top: 13vh;
-    gap: 100px;
+    width: 95vw;
 }
 
 #video-container {
@@ -20,36 +20,40 @@ body {
 
 #video-feed {
     width: 55vw;
+    z-index: 0;
 }
-
 
 .detection-container {
     margin-top: 10vh;
-    width: 30vw;
+    width: 38vw;
     height: 80vh;
-    padding-left: 5px;
-    padding-right: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: hidden;
+    padding: 0;
+    z-index: 1;
+}
+
+.detection-list {
+    padding: 0;
 }
 
 .detection-element {
+    max-width: 38vw;
     font-family: Helvetica, sans-serif;
     color: black;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     text-align: center;
     display: flex;
     flex-direction: column;
 }
 
 .detection-element .detection-name {
-    font-size: 48px;
+    font-size: 45px;
     font-weight: bold;
 }
 
 .detection-element .detection-desc {
-    font-size: 32px;
+    font-size: 30px;
     color: #444;
 }

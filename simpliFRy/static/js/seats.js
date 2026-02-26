@@ -527,12 +527,7 @@ const fetchDetections = () => {
                     buffer = parts[parts.length - 1] || "";
 
                     if (Array.isArray(data)) {
-                        updateTables(data);
-                        updateDetectionList(data);
-                        if (document.URL.includes("old_layout")) {
-                            // hacky and not good practice. will refactor in the future.
-                            updateBBoxes(data);
-                        }
+                        updateTablesAndDetectionList(data);
                     }
 
                     processStream();
@@ -576,30 +571,7 @@ const resetTables = () => {
     });
 };
 
-const updateTables = (data) => {
-    const uniqueLabels = new Set();
-    resetTables();
-
-    // Process detections in order of detection (no sorting)
-    data.forEach((detection) => {
-        const unknown = detection.label === "UNKNOWN";
-        let table = null;
-
-        if (!unknown && !uniqueLabels.has(detection.label)) {
-            table = getTable(detection.label, namelistJSON); // e.g. "T4"
-            if (table !== null) {
-                uniqueLabels.add(detection.label);
-
-                // light up the table
-                updateTable(table);
-            }
-        }
-
-        if (!detection.bbox) return;
-    });
-};
-
-// table detection list functionality
+// ------- table detection list functionality -------------
 
 let HOLD_TIME = 100;
 fetchSettings().then(settings => {
@@ -608,13 +580,14 @@ fetchSettings().then(settings => {
 const activeDetections = new Map(); // name -> { lastSeen, detection }
 const detectionList = document.getElementById("table-detection-list");
 
-const updateDetectionList = (data) => {
+const updateTablesAndDetectionList = (data) => {
+    resetTables();
     const now = Date.now();
 
     // Update / refresh detections from stream
     data.forEach((detection) => {
         const name = detection.label.toUpperCase();
-        if (name === "UNKNOWN") return;
+        if (name === "UNKNOWN") return; // filter out unknown
 
         activeDetections.set(name, {
             lastSeen: now,
@@ -634,12 +607,15 @@ const updateDetectionList = (data) => {
 
     for (const [name, entry] of activeDetections.entries()) {
         let table = getTable(name, namelistJSON);
-        table = table ? `(${table})` : "";
-
+        
+        // Update Table Elements
+        if (table) 
+            updateTable(table); 
+        
         let detectionEl = document.createElement("div");
         detectionEl.classList.add("table-detection-element");
         detectionEl.dataset.name = name;
-        detectionEl.innerHTML = `${name} ${table}`;
+        detectionEl.innerHTML = `${name} ${table ? `(${table})` : ""}`;
 
         detections.push(detectionEl);
     }

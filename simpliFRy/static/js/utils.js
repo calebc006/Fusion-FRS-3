@@ -14,6 +14,7 @@ export const loadNamelistJSON = async (path) => {
 
 // Get country flag path for a given name
 export const getCountryFlag = (name, namelistJSON) => {
+    console.log(name)
     if (!namelistJSON || !namelistJSON.details) return null;
 
     const person = namelistJSON.details.find((detail) => {

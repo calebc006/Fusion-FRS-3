@@ -139,8 +139,9 @@ body {
     font-family: "Times New Roman", Times, serif;
     font-size: 24px;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow: visible;
     border-left: solid 3px #242424;
+    padding: 30px;
 }
 
 .detections {
