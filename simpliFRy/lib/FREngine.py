@@ -26,7 +26,7 @@ FR_DEFAULT_SETTINGS = {
     "threshold": 0.45, 
     "holding_time": 2, 
     "max_detections": 50, 
-    "perf_logging": False, 
+    "perf_logging": True, 
     "frame_skip": 1, 
     "max_broadcast_fps": 50,
 
@@ -525,7 +525,8 @@ class FREngine:
             resized_frame = cv2.resize(frame, (self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT))
             preds = self.model.get(resized_frame)
             preds.sort(key=lambda x: x.det_score)
-            preds = preds[:self.fr_settings["max_detections"]] # Limit to top few detections
+            max_detections = min(len(preds), self.fr_settings["max_detections"])
+            preds = preds[:max_detections] # Limit to top few detections
 
             t1 = time.monotonic() # t1-t0 is the time to get predictions from model
 

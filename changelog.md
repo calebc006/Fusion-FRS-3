@@ -23,6 +23,7 @@
 ### SimpliFRy
 - [x] Reused similar backend to InteractiveFR
 - [x] Ported over UI changes, reworked init page logic, implemented holding_time on frontend
+- [X] Updated front-end, removed static image background
 - [ ] Reliability and performance testing
 - [x] Update docs
 
@@ -37,4 +38,5 @@
 - [ ] Lazy loading for reference images
 - [ ] Port over perf log to SimpliFRy
 - [ ] ibpng warning: iCCP: known incorrect sRGB profile (warning during png decode)
-- [ ] Manual marking in Gotendance overwrites 
+- [ ] Manual marking in Gotendance should overwrite!
+- [ ] perf_log disabled causes detections to stop in SimpliFRy

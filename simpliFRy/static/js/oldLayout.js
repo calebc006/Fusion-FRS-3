@@ -110,7 +110,6 @@ const updateDetectionList = (data) => {
 
     for (const [name, entry] of activeDetections.entries()) {
         let table = getTable(name, namelistJSON);
-        table = table ? `(${table})` : "";
 
         let description = getDescription(name, namelistJSON);
 
@@ -119,7 +118,7 @@ const updateDetectionList = (data) => {
         detectionEl.dataset.name = name;
 
         detectionEl.innerHTML = `
-            <span class="detection-name">${name} ${table}</span>
+            <span class="detection-name">${name} ${table ? `(${table})` : ""}</span>
             ${description ? `<span class="detection-desc">${description}</span>` : ""}
         `;
 

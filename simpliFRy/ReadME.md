@@ -130,11 +130,18 @@ Everytime the app is started, a new `.logs` file will be created in the `/data/l
 
 To configure the Python web server, create a file named `.env` in the base directory. Its format should be:
 
-```
-APP_IP = 0.0.0.0
-APP_PORT = 1333
-APP_VIDEO = true
-APP_ENV = production
+```python
+APP_IP=0.0.0.0
+APP_PORT=1333
+APP_ENV=development # "production" or "development"
+
+STREAM_JPG_QUALITY=75
+WIDTH=1920
+HEIGHT=1080
+
+# Input resolution for buffalo_l 
+INFERENCE_WIDTH=640
+INFERENCE_HEIGHT=480
 ```
 
 ## Settings
@@ -180,8 +187,8 @@ simpliFRy/
         {
             "name": "John Doe",
             "images": ["john_doe1.jpg", "john_doe2.png"],
-            "country_flag": "singapore_flag.png",
             "description": "someone",
+            "country_flag": "singapore_flag.png",
             "table": "T1",
             "tags": ["Army", "DIS"],
             "priority": 2
@@ -189,8 +196,8 @@ simpliFRy/
         {
             "name": "3SG CALEB CHIA",
             "images": ["caleb.png"],
-            "country_flag": "singapore_flag.png",
             "description": "someone else",
+            "country_flag": "singapore_flag.png",
             "table": "VIP",
             "tags": ["Air Force"],
             "priority": 1
@@ -199,10 +206,21 @@ simpliFRy/
 }
 ```
 
-- `img_folder_path` (optional) will the path to the folder with all the faces relative to `/data`
+| Parameter | Type | Description | Required? |
+|-----------|--------|--------------------------|-------|
+|`img_folder_path`| String | The path to the folder with all the user images relative to `/data`| Y |
+|`flag_folder_path`| String | The path to the folder with all the country flags relative to `/data`| |
+|`name`| String | The display name of the user (must be unique!) | Y |
+|`images`| List[String] | List of image names within `img_folder_path`| Y |
+|`description`| List[String] | Optional description to be displayed alongside `name` | |
+|`country_flag`| String | Image name for the flag to be displayed on `/welcome` page | |
+|`table`| String | The table name that is used for the `/seats` table lighting functionality | |
+|`tags`| List[String] | Optional list of filter tags used in Gotendance | |
+|`priority`| Integer | Determines the sorting order in detection lists (lower number = shown first). If two people have the same priority or no priority is set, they are sorted alphabetically | |
 
-- `flag_folder_path` (optional) will the path to the folder with all the country flags relative to `/data`
 
-- `priority` (optional) determines the sorting order in detection lists (lower number = shown first). If two people have the same priority or no priority is set, they are sorted alphabetically.
+## Display Customization
 
-- **The fields `flag_folder_path`, `country_flag`, `description`, `table`, `tags`, `priority` can be omitted if the deployment does not require these information.**
+To customize titles for a page, go to the page's html file, locate the title div and make the necessary changes: `<div class="title">MY NEW TITLE</div>` 
+
+For the `/seats` page, the image can be changed

@@ -130,7 +130,9 @@ APP_PORT=1334
 APP_ENV=production # "production" or "development"
 
 # Out of 100. Higher is better, but costs more latency and bandwidth
-STREAM_JPG_QUALITY=90 
+STREAM_JPG_QUALITY=90
+WIDTH=1920
+HEIGHT=1080 
 
 # Input resolution for inference; 4:3 aspect ratio recommended for HIKVISION cameras
 INFERENCE_WIDTH=640
