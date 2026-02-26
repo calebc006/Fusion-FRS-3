@@ -1,5 +1,6 @@
 services:
   simplifry:
+    image: v3.1-beta
     build: .
     ports:
       - "1333:1333"

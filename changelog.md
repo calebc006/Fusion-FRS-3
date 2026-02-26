@@ -6,37 +6,39 @@
 - Introduced InteractiveFR, using a similar backend as SimpliFRy.
 - Deployed for 29th SMEAC @ SAFTI MI and 2026 SSPP @ JPJC.
 
-## v3.1 (CAA 170226)
+## v3.1-beta (CAA 260226)
 ### InteractiveFR
-- [x] Refactored backend to use dependency injection. Separated `VideoPlayer` and `InteractiveFREngine` classes
-- [x] Converted buffer to `np.ndarray` before storing in `VideoPlayer`
-- [x] Factored out Voyager index to separate `EmbeddingIndex` class
-- [x] Improved backend perf-logging; exposed perf-log to frontend
-- [x] Removed hold_time from the backend. Switched to using a queue with max-length for old_detections.
-- [x] Separated input resolution from inference resolution. Improved default quality and resolution of stream; configurable from env.
-- [x] Switched to non-square model input (640x480 default) 
-- [x] Catch and warn user when capturing with an existing name. Confirmation required via separate API path `/capture/confirm`.
-- [x] UI changes: Enlarged video feed, improved capture/remove image toasts, changed bbox labels (only display for target and identified faces), added settings submit toast, capture on "ENTER"
-- [ ] Reliability and performance testing
-- [x] Update docs and developer guide
+- Refactored backend to use dependency injection. Separated `VideoPlayer` and `InteractiveFREngine` classes
+- Converted buffer to `np.ndarray` before storing in `VideoPlayer`
+- Factored out Voyager index to separate `EmbeddingIndex` class
+- Improved backend perf-logging; exposed perf-log to frontend
+- Removed hold_time from the backend. Switched to using a queue with max-length for old_detections.
+- Separated input resolution from inference resolution. Improved default quality and resolution of stream; configurable from env.
+- Switched to non-square model input (640x480 default) 
+- Catch and warn user when capturing with an existing name. Confirmation required via separate API path `/capture/confirm`.
+- UI changes: Enlarged video feed, improved capture/remove image toasts, changed bbox labels (only display for target and identified faces), added settings submit toast, capture on "ENTER"
+- Update docs and developer guide
 
 ### SimpliFRy
-- [x] Reused similar backend to InteractiveFR
-- [x] Ported over UI changes, reworked init page logic, implemented holding_time on frontend
-- [X] Updated front-end, removed static image background
-- [ ] Reliability and performance testing
-- [x] Update docs
+- Reused similar backend to InteractiveFR
+- Ported over UI changes, reworked init page logic, implemented holding_time on frontend
+- Updated front-end, removed static image background
+- [ ] Reliability and performance testin
+- Update docs
 
 ### Gotendance
-- [x] Confirm that we aren't dropping any detections, even with high update interval
-- [x] Update docs
+- Confirm that we aren't dropping any detections, even with high update interval
+- Update docs
 
 ## Future
+### Known Issues:
+- [ ] perf_log disabled causes detections to stop in SimpliFRy
+- [ ] ibpng warning: iCCP: known incorrect sRGB profile (warning during png decode, likely buggy pngs)
+
+### Potential Changes
 - [ ] Convert all thresholds to cosine *similarity* (higher = better match)
 - [ ] Implement TLS (https) for safer multi-location implementation
 - [ ] Two separate FFMPEG processes for RAW and MJPEG streams
 - [ ] Lazy loading for reference images
 - [ ] Port over perf log to SimpliFRy
-- [ ] ibpng warning: iCCP: known incorrect sRGB profile (warning during png decode)
-- [ ] Manual marking in Gotendance should overwrite!
-- [ ] perf_log disabled causes detections to stop in SimpliFRy
+- [ ] Manual marking in Gotendance should override auto-detection
