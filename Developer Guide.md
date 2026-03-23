@@ -210,11 +210,11 @@ Several optimizations reduce end-to-end latency:
 
 **Performance Logging** (`perf_logging=true`):
 ```
-[PERF] infer:12fps/18ms search:0.2ms skip:2
+[PERF] infer:25.0fps|15ms (14.1|0.1|0.8) skip:81%
 ```
 - `infer`: Actual inference rate / average time per inference
-- `search`: Vector search time (Voyager or brute force)
-- `skip`: Current frame_skip setting
+- `(model | search | others)`: Shows breakdown of time taken for each inference step: model call, vector search, and allother tasks (persistor, target update, etc)
+- `skip`: Fraction of infer calls that are skipped (same frame)
 
 ### Frontend Rendering
 

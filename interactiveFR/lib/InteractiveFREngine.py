@@ -539,7 +539,7 @@ class FREngine:
                 detection, frame = self.latest_target_detection, self.latest_target_frame
             if detection is None or frame is None:
                 return {"ok": False, "message": "No target face available."}
-            crop = self._crop_image(np.asarray(frame), detection["bbox"]) # convert back from memoryview to np array first!
+            crop = self._crop_image(frame, detection["bbox"]) 
 
         # Check if name is already in database. Block if allow_duplicate=False
         if safe_name in current_names:
@@ -641,7 +641,7 @@ class FREngine:
 
         if target_idx is not None and target_idx < len(embeddings):
             with self.capture_lock:
-                self.latest_target_frame = memoryview(frame)
+                self.latest_target_frame = np.copy(frame)
                 self.latest_target_detection = {
                     "bbox": bboxes[target_idx], 
                     "embedding": np.asarray(embeddings[target_idx], dtype=np.float32)
