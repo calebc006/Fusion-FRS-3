@@ -43,7 +43,7 @@ For more information on installation, refer to the following:
 
 In Fusion Company, we typically use HIKVISION IP cameras to provide RTSP input during deployment. As of Feb 2026, we use the HIKVISION iDS-2CD7A46G0-IZHS. 
 
-Video settings can be adjusted in the HIKVISION Video Management Software. These are the typical settings we use, to balance low-latency and acceptable video quality.
+Video settings can be adjusted in the HIKVISION Video Management Software, which can be accessed by typing the IP address of the camera into the search bar of your browser. These are the typical settings we use, to balance low-latency and acceptable video quality.
 
 ![Video Settings](./simpliFRy/assets/image.png)
 

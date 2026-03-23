@@ -1,6 +1,6 @@
 services:
     interactivefr:
-        image: v3.1-beta
+        image: v3.1
         build: .
         ports:
             - "1334:1334"
