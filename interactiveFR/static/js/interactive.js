@@ -2,7 +2,9 @@ import { updateBBoxes, clearBBoxes, waitForStream, fetchStreamStatus, showToast 
 import { initReferencesUI, refreshReferenceImages } from "./references.js";
 
 // ───────────────────────────── State ─────────────────────────────────────
-let hasTarget = false;
+let hasTarget = false; // controls the acivation of the capture button
+let isVideoReady = false; // becomes true when video container loads
+let settings = undefined; // loaded on DOMContentLoaded
 
 const $ = (id) => document.getElementById(id);
 const capturePanel = $("capture-panel");
@@ -14,8 +16,6 @@ const referencesPanelBtn = $("references-panel-button");
 const toast = $("toast");
 const videoFeed = $("video-feed");
 const perfDisplay = $("perf-log");
-
-let isVideoReady = false; // becomes true when video container loads
 
 // ───────────────────────────── Init ──────────────────────────────────────
 
@@ -53,6 +53,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     try {
         clearBBoxes($("video-container"));
 
+        // Block if stream is not running
         const status = await fetchStreamStatus();
         if (status.stream_state !== "running") {
             const restart = await tryRestartStream();
@@ -65,6 +66,11 @@ window.addEventListener("DOMContentLoaded", async () => {
                 return (window.location.href = "/");
             }
         }
+
+        // hide bottom-info (IP and performance) if perf_logging disabled
+        const settings_response = await fetch("/api/get_settings");
+        settings = await settings_response.json();
+        $("bottom-info").style.display = settings["perf_logging"] ? "flex" : "none";
 
         // cache-buster to prevent getting stuck by browser caching
         videoFeed?.setAttribute("data", `/api/vidFeed?t=${Date.now()}`);

@@ -17,18 +17,15 @@
 - Switched to non-square model input (640x480 default) 
 - Catch and warn user when capturing with an existing name. Confirmation required via separate API path `/capture/confirm`.
 - UI changes: Enlarged video feed, improved capture/remove image toasts, changed bbox labels (only display for target and identified faces), added settings submit toast, capture on "ENTER"
-- Update docs and developer guide
 
 ### SimpliFRy
 - Reused similar backend to InteractiveFR
 - Ported over UI changes, reworked init page logic, implemented holding_time on frontend
 - Updated front-end, removed static image background
-- [ ] Reliability and performance testin
-- Update docs
+- [ ] Reliability and performance testing
 
 ### Gotendance
 - Confirm that we aren't dropping any detections, even with high update interval
-- Update docs
 
 ## Future
 ### Known Issues:
