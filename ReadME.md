@@ -4,7 +4,7 @@
 
 This repository contains all the source code for Fusion FRS 3 (initially released Feb 2026). 
 
-FRS 3.0 is a web application for real-time facial recognition. Used for attendance taking for events and army/unit showcases.
+FRS 3 is a web application for real-time facial recognition. Used for attendance taking for events and army/unit showcases.
 
 `/simplifry` contains the core FRS software used for deployment. **SimpliFRy** is a locally-hosted web application built using python 3.10 and [Flask](https://github.com/pallets/flask). It makes use of the [`buffalo_l`](https://github.com/deepinsight/insightface/blob/master/python-package/README.md#model-zoo) model by [InsightFace](https://github.com/deepinsight/insightface) for face detection and generation of embeddings, while Spotify's [Voyager](https://github.com/spotify/voyager) is used for approximate-nearest-neighbor search. 
 
