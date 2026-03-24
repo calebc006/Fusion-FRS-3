@@ -28,7 +28,7 @@
 - Confirmed that we aren't dropping any detections, even with high update interval
 
 ## Future
-### Known Issues:
+### TODO:
 - [ ] Large scale setup testing for future events
 - [ ] Need for tuning of parameters
 - [ ] (low priority) ibpng warning: iCCP: known incorrect sRGB profile (warning during png decode, likely buggy pngs)

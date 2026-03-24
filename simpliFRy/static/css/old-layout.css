@@ -24,7 +24,7 @@ body {
 }
 
 .detection-container {
-    margin-top: 10vh;
+    margin-top: 12vh;
     width: 38vw;
     height: 80vh;
     display: flex;
@@ -55,5 +55,5 @@ body {
 
 .detection-element .detection-desc {
     font-size: 30px;
-    color: #444;
+    opacity: 70%;
 }

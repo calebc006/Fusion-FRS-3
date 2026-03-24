@@ -54,7 +54,7 @@ No installation process is needed on the target machine.
 
 ### Prerequisites
 
-- [Go](https://go.dev/doc/install) (version 1.16 or later recommended)
+- [Go](https://go.dev/doc/install) (version 1.16 or later)
 
 ### Building from Source
 
