@@ -180,8 +180,7 @@ const updateDetections = (data) => {
 
     // Update country flag based on top detection
     const topDetection = detections[0]?.innerText;
-    if (topDetection)
-        updateCountryFlag(topDetection);
+    updateCountryFlag(topDetection);
 };
 
 // -------- VIDEO MODAL STUFF ----------
