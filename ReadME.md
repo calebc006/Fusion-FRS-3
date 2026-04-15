@@ -39,7 +39,9 @@ For a detailed list of changes, refer to [changelog.md](./changelog.md)
 
 ---
 
-## Installation & Setup
+## Installation & Setup (SimpliFRy + Gotendance)
+
+For installation and setup of InteractiveFR, refer to the application specific [ReadME](interactiveFR\ReadME.md).
 
 ### Prerequisites
 
@@ -76,6 +78,28 @@ For development or custom setups, refer to:
 - [SimpliFRy Installation Guide](./simpliFRy/ReadME.md#installation)
 - [Gotendance Installation Guide](./gotendance/ReadME.md#installation)
 - [InteractiveFR Installation Guide](./interactiveFR/ReadME.md#install-and-run)
+
+### Local Development Setup
+
+For development without Docker:
+
+**SimpliFRy:**
+```bash
+cd simpliFRy
+python -m venv venv
+venv\Scripts\activate  # On macOS/Linux: source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+# Access at http://localhost:1333
+```
+
+**Gotendance:**
+```bash
+cd gotendance
+go build
+./gotendance.exe  # On Linux/macOS: ./gotendance
+# Access at http://localhost:1500
+```
 
 ---
 
@@ -126,50 +150,6 @@ HEIGHT=1080
 INFERENCE_WIDTH=640
 INFERENCE_HEIGHT=480
 ```
-
-### Local Development Setup
-
-For development without Docker:
-
-**SimpliFRy:**
-```bash
-cd simpliFRy
-python -m venv venv
-venv\Scripts\activate  # On macOS/Linux: source venv/bin/activate
-pip install -r requirements.txt
-python app.py
-# Access at http://localhost:1333
-```
-
-**Gotendance:**
-```bash
-cd gotendance
-go build
-./gotendance.exe  # On Linux/macOS: ./gotendance
-# Access at http://localhost:1500
-```
-
----
-
-## Architecture
-
-### SimpliFRy
-- **Backend**: Python 3.10 + Flask
-- **Face Detection**: InsightFace (buffalo_l model)
-- **Embedding Search**: Spotify Voyager (ANN)
-- **Output**: HTTP streaming JSON responses at `/api/frResults`
-
-### Gotendance
-- **Backend**: Go 1.23.0
-- **Frontend**: Vanilla HTML/CSS/JavaScript
-- **Input**: HTTP streaming from SimpliFRy
-- **Output**: Attendance records in JSON format
-- **No external runtime dependencies** (standalone binary)
-
-### InteractiveFR
-- Similar backend to SimpliFRy
-- Allows real-time face capture and database updates
-- Used for demonstrations and interactive setups
 
 ---
 
@@ -248,7 +228,31 @@ Video settings can be adjusted in the HIKVISION Video Management Software, which
 
 Image settings can also be changed to adjust exposure, contrast, dynamic range and more. These should be tuned to ensure a clear image given the lighting conditions of the deployment site. 
 
+
 ---
+
+## Architecture
+
+### SimpliFRy
+- **Backend**: Python 3.10 + Flask
+- **Face Detection**: InsightFace (buffalo_l model)
+- **Embedding Search**: Spotify Voyager (ANN)
+- **Output**: HTTP streaming JSON responses at `/api/frResults`
+
+### Gotendance
+- **Backend**: Go 1.23.0
+- **Frontend**: Vanilla HTML/CSS/JavaScript
+- **Input**: HTTP streaming from SimpliFRy
+- **Output**: Attendance records in JSON format
+- **No external runtime dependencies** (standalone binary)
+
+### InteractiveFR
+- Similar backend to SimpliFRy
+- Allows real-time face capture and database updates
+- Used for demonstrations and interactive setups
+
+---
+
 
 ## License 
 
