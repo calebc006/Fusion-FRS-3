@@ -2,12 +2,13 @@ button{
     display: flex;
     justify-content: center;
     align-items: center;
-  
     margin-left: auto;
     margin-right: auto;
-    transition: outline 0.3s ease;
+    transition: all 0.3s ease;
     width: fit-content;
     border-radius: 0.5em;
+    border: none;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
   svg{
     display: flex;
@@ -50,13 +51,13 @@ button{
     background-color: #4CAF50; /* Green background */
     border: none; /* Remove borders */
     color: white; /* White text */
-    padding: 15px 32px; /* Some padding */
+    padding: 12px 28px; /* Some padding */
     text-align: center; /* Centered text */
     text-decoration: none; /* Remove underline */
     display: inline-block;
-    font-size: 16px; /* Increase font size */
-    font-weight: bold; /* Bold text */
-    border-radius: 12px; /* Rounded corners */
+    font-size: 15px; /* Increase font size */
+    font-weight: 500; /* Bold text */
+    border-radius: 8px; /* Rounded corners */
     transition: all 0.3s ease; /* Smooth transition for hover effects */
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* Add a shadow */
     cursor: pointer; /* Pointer/hand icon */
@@ -76,12 +77,13 @@ button{
 }
 
 .search-bar {
-    padding: 1em;
+    padding: 12px 16px;
     border-radius: 0em 0.5em 0.5em 0em;
     border-width: 0;
     background-color: rgb(50,50,50);
     color: var(--color-foreground);
     width: 350px;
+    font-size: 15px;
 }
 
 .search-container.focused {
@@ -161,6 +163,7 @@ button{
 .recordsTable td {
     padding: 15px 20px;
     text-align: center;
+    font-size: 15px;
 }
 
 .recordsTable th:first-child,
@@ -193,10 +196,12 @@ button{
 .recordsTable th {
     font-weight: 600;
     letter-spacing: 0.5px;
+    font-size: 16px;
 }
 
 .recordsTable td {
     font-weight: 400;
+    font-size: 15px;
 }
 
 /* Responsive design for smaller screens */
@@ -248,7 +253,7 @@ button{
 
 .filter-container label {
     color: white;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
 }
 
@@ -259,7 +264,7 @@ button{
     padding: 10px 18px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     transition: all 0.2s ease;
 }
@@ -368,18 +373,96 @@ button{
 
 .reset-button {
     display: block;
-    margin: 1em auto 0;
-    padding: 0.6em 1.2em;
-    border-radius: 0.5em;
+    margin: 1.5em auto 0;
+    padding: 12px 28px;
+    border-radius: 8px;
     background-color: #e74c3c;
     color: white;
-    font-size: 0.95em;
+    font-size: 15px;
     font-weight: 500;
     border: none;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .reset-button:hover {
     background-color: #c0392b;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.reset-button:active {
+    background-color: #a93226;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(0);
+}
+
+/* Streams section styling for records page */
+#streams {
+    width: 100%;
+    padding: 40px 20px 30px 20px;
+    margin-top: 30px;
+    text-align: center;
+    background: linear-gradient(180deg, transparent 0%, rgba(50, 50, 50, 0.15) 100%);
+    border-top: 2px solid rgba(100, 100, 100, 0.3);
+    border-bottom: 2px solid rgba(100, 100, 100, 0.2);
+}
+
+#streams .title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 30px 0;
+    color: var(--color-foreground);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Ensure entry items are styled consistently */
+.entry-list .entry {
+    max-width: 600px;
+}
+
+/* Light mode adjustments for streams section */
+@media (prefers-color-scheme: light) {
+    #streams {
+        background: linear-gradient(180deg, transparent 0%, rgba(200, 200, 200, 0.1) 100%);
+        border-top: 2px solid rgba(100, 100, 100, 0.15);
+        border-bottom: 2px solid rgba(100, 100, 100, 0.1);
+    }
+}
+
+/* Light mode adjustments for dark theme elements */
+@media (prefers-color-scheme: light) {
+    .dashboard {
+        background-color: #f0f0f0;
+        color: #000;
+    }
+    
+    .dashboard .attendance,
+    .dashboard .percentage {
+        color: #000;
+    }
+    
+    .filter-container label {
+        color: #000;
+    }
+    
+    .recordsTable {
+        background-color: #f8f8f8;
+        color: #000;
+    }
+    
+    .recordsTable thead tr {
+        background-color: #e0e0e0;
+        color: #000;
+    }
+    
+    .recordsTable tbody tr:nth-of-type(even) {
+        background-color: #f8f8f8;
+    }
+    
+    .recordsTable tbody tr:hover {
+        background-color: #f0f0f0;
+    }
 }

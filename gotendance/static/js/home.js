@@ -70,6 +70,9 @@ streamForm.addEventListener('submit', (event) => {
 //File upload
 const fileInputEl = document.getElementById('fileInput')
 const fileNameLabelEl = document.getElementById('fileInputLabel')
+const fileForm = document.getElementById('fileForm')
+const uploadStatusEl = document.getElementById('upload-status')
+const uploadStatusTextEl = document.getElementById('upload-status-text')
 
 fileInputEl.addEventListener('change', () => {
     console.log(fileInputEl.files)
@@ -80,11 +83,30 @@ fileInputEl.addEventListener('change', () => {
 
     const fileName = fileInputEl.files[0].name;
     fileNameLabelEl.innerHTML = fileName
+    
+    // Automatically submit the form using fetch (no page redirect)
+    const formData = new FormData(fileForm)
+    
+    fetch(fileForm.action, {
+        method: fileForm.method,
+        body: formData
+    }).then(response => {
+        if (!response.ok) throw new Error('Failed to submit form')
+        return response.json()
+    }).then(_data => {
+        fileNameLabelEl.innerHTML = "Select File"
+        fileForm.reset()
+        uploadStatusEl.classList.remove('error')
+        uploadStatusTextEl.textContent = `Loaded: ${fileName}`
+        uploadStatusEl.style.display = 'block'
+        localStorage.setItem('lastLoadedFile', fileName)
+    }).catch(error => {
+        console.log("Fetch operation failed", error)
+        uploadStatusEl.classList.add('error')
+        uploadStatusTextEl.textContent = '✗ Error loading JSON file'
+        uploadStatusEl.style.display = 'block'
+    })
 })
-
-const fileForm = document.getElementById('fileForm')
-const uploadStatusEl = document.getElementById('upload-status')
-const uploadStatusTextEl = document.getElementById('upload-status-text')
 
 fileForm.addEventListener('submit', (event) => {
     event.preventDefault()
@@ -101,15 +123,12 @@ fileForm.addEventListener('submit', (event) => {
     }).then(_data => {
         fileNameLabelEl.innerHTML = "Select File"
         fileForm.reset()
-        // Show filename
         uploadStatusEl.classList.remove('error')
         uploadStatusTextEl.textContent = `Loaded: ${fileName}`
         uploadStatusEl.style.display = 'block'
-        // Persist to localStorage
         localStorage.setItem('lastLoadedFile', fileName)
     }).catch(error => {
         console.log("Fetch operation failed", error)
-        // Show error message
         uploadStatusEl.classList.add('error')
         uploadStatusTextEl.textContent = '✗ Error loading JSON file'
         uploadStatusEl.style.display = 'block'

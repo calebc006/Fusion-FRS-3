@@ -1,11 +1,9 @@
 # Environments
-.env
 .venv
-env/
 venv/
 
 # Data
-data/
+data/*
 
 # Embeddings cache and database
 Embeddings.db

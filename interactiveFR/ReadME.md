@@ -123,7 +123,6 @@ Access the application at <http://localhost:1334> (preferably using a Chromium b
 - The whole `/data` directory is a docker volume so its contents are persisted when using docker
 
 ## `.env`
-Refer to `.env.example`
 ```py
 APP_IP=0.0.0.0
 APP_PORT=1334

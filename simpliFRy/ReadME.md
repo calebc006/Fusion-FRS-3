@@ -1,250 +1,166 @@
-<!-- omit from toc -->
 # SimpliFRy
 
 ![Project Logo](static/images/favicon.png)
 
 ---
 
-<!-- omit from toc -->
 ## Table of Contents
 
-- [Description](#description)
+- [Overview](#overview)
+- [Architecture](#architecture)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Pages](#pages)
-- [`/data`](#data)
-- [`.env`](#env)
-- [Settings](#settings)
-- [Data Preparation](#data-preparation)
+- [Pages & Endpoints](#pages--endpoints)
+- [Configuration](#configuration)
+- [Data Directory](#data-directory)
+- [Advanced Configuration](#advanced-configuration)
 
 ---
 
-## Description
+## Overview
 
-**SimpliFRy** is the core component for deployment of **FRS 3**. It is a locally-hosted web application built using Python 3.10 and [Flask](https://github.com/pallets/flask), and makes use of the [InsightFace](https://github.com/deepinsight/insightface) library by deepinsight for face detection and generation of embeddings as well as the [Voyager](https://github.com/spotify/voyager) library by Spotify for ANN search.
+**SimpliFRy** is the core facial recognition component of **FRS 3**. It is a locally-hosted web application built using Python 3.10 and [Flask](https://github.com/pallets/flask), providing real-time face detection, embedding generation, and result streaming.
 
-If you are a developer and would like to understand more about how SimpliFRy works, refer to the [Developer Guide](../Developer%20Guide.md)
+For integration with Gotendance or deployment instructions, refer to the [main README](../ReadME.md).  
+For the technical deep dive, see the [Developer Guide](./Developer%20Guide.md)
+
+---
+
+## Architecture
+
+### Technology Stack
+- **Backend**: Python 3.10 + Flask web framework
+- **Face Detection**: [InsightFace](https://github.com/deepinsight/insightface) library (buffalo_l model)
+- **Embedding Search**: [Spotify Voyager](https://github.com/spotify/voyager) for approximate-nearest-neighbor search
+- **Video Processing**: FFmpeg integration
+- **Deployment**: Docker containers with optional GPU support (NVIDIA CUDA)
+
+### Key Components
+- **Video Stream Handler**: Manages RTSP/HTTP video input
+- **Face Detection Engine**: Detects faces and generates embeddings
+- **Result Broadcaster**: Streams recognition results via HTTP streaming
+- **Attendance Manager**: Optionally integrates with Gotendance via `/api/frResults` endpoint
 
 ---
 
 ## Installation
 
-### Prerequisites
+> For complete setup instructions including Docker, refer to the [main README](../ReadME.md#installation--setup)
 
-- [Python 3.10](https://www.python.org/downloads/) (or later)
-- [FFmpeg 8.0.1](https://www.ffmpeg.org/download.html) (or later)
-- [Docker](https://www.docker.com/products/docker-desktop/) (optional)
-- [Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (for GPU usage within docker container)
+### Quick Start
 
-The `buffalo_l` model will auto-install if it is not found on your system. Alternatively, you can install it manually by following the instructions [here](https://github.com/deepinsight/insightface/blob/master/python-package/README.md#model-zoo). A copy of `buffalo_l.zip` can be found in the root directory of this repository.
-
-
-### Download Source Code
-
-1. Clone the repository:
-
-    ```bash
-    git clone https://github.com/calebc006/Fusion-FRS-3.0.git
-    ```
-
-2. Navigate to simpliFRy directory
-
-    ```bash
-    cd simpliFRy
-    ```
-
-### Installation via Docker (Recommended)
-
-1. Build Docker Image
-   
-    ```bash
-    docker compose build
-    ```
-
-### Installation via Virtual Environment (For development)
-
-1. First, create a Python virtual environment in the `simpliFRy` directory
-
-    ```bash
-    py -m venv venv
-    ```
-
-2. Activate it
-
-    ```bash
-    venv\Scripts\activate # use source venv/bin/activate for linux and macOS
-    ```
-
-3. Install the requirements with pip
-
-    ```bash
-    pip install -r requirements.txt # this may take some time!
-    ```
-
----
-
-## Usage
-
-### Docker (Recommended)
-
-To start up a new container from the command line, run the following command from the `simpliFRy` directory
-
+**Using Docker (Recommended):**
 ```bash
+cd simpliFRy
+docker compose build
 docker compose up
 ```
 
-If you already have an existing container, you can simply start by pressing the play button in the Docker Desktop application.
-
-### Virtual Environment (For development)
-
-Activate the Python virtual environment and run the `app.py` script
-
+**For Local Development:**
 ```bash
-venv\Scripts\activate # use source venv/bin/activate for linux and macOS
+python -m venv venv
+venv\Scripts\activate  # macOS/Linux: source venv/bin/activate
+pip install -r requirements.txt
+python app.py
 ```
 
-```bash
-py app.py
+Access the application at **http://localhost:1333**
+
+### Prerequisites
+- Python 3.10+ (for local development)
+- Docker & Docker Compose (for containerized setup)
+- NVIDIA Container Toolkit (optional, for GPU support)
+- FFmpeg 8.0.1+ (required)
+
+The `buffalo_l` model will auto-install on first run. A copy of `buffalo_l.zip` is available in the root directory.
+
+## Pages & Endpoints
+
+### Web Pages
+
+- `/` - Main interface for starting video streams and initiating FR
+- `/seats` - Seating layout view (for organized venue tracking)
+- `/old_layout` - Alternative layout for different use cases
+- `/settings` - Configuration and data loading page
+
+### API Endpoints
+
+- `GET /api/frResults` - HTTP streaming endpoint for real-time recognition results  
+  - Used by Gotendance to track attendance
+  - Returns JSON stream of detected faces with labels
+
+---
+
+## Configuration
+
+### Environment Variables (`.env` file)
+
+Create or modify `.env` in the SimpliFRy directory:
+
 ```
-
-Access the application at <http://localhost:1333> (preferably using a Chromium browser)
-
-
-## Pages
-
-The pages in this application are:
-
-- `localhost:1333`
-- `localhost:1333/seats`
-- `localhost:1333/old_layout`
-- `localhost:1333/settings`
-
-## `.env` 
-
-To configure the Python web server, create a file named `.env` in the `/simpliFRy` directory. Its format should be:
-
-```python
 APP_IP=0.0.0.0
 APP_PORT=1333
-APP_ENV=production # "production" or "development"
+APP_ENV=production        # "production" or "development"
 
-STREAM_JPG_QUALITY=75
-WIDTH=1920
-HEIGHT=1080
+# Video settings
+STREAM_JPG_QUALITY=75     # JPEG compression (1-100)
+WIDTH=1920                # Video resolution width
+HEIGHT=1080               # Video resolution height
 
-# Input resolution for buffalo_l 
-INFERENCE_WIDTH=640
-INFERENCE_HEIGHT=480
+# Inference settings (optimized for speed/accuracy)
+INFERENCE_WIDTH=640       # Model input width
+INFERENCE_HEIGHT=480      # Model input height
 ```
 
-## `/data` 
+### Runtime Settings (via UI)
 
-If not present in `/simpliFRy`, create a new folder name `data`.
+Adjustable in the `/settings` page:
+- Recognition threshold
+- Face detection confidence  
+- Embedding search sensitivity
+- Display and logging preferences
 
-The `data` directory in `simpliFRy` is a **volume mount** as it is volume mounted to the `/app/data` directory within the docker container. Hence, it is the primary way to pass information to and from the container.
+---
 
-Everytime the app is started, a new `.logs` file will be created in the `/data/logs` directory. It will list key actions undertaken by the simpliFRy app (and any error messages) in that session.
+## Data Directory
 
-The `data` directory is also where you would store the namelist and database of reference images (more info later).
-
-
-## Data Preparation
-
-To conduct facial recognition, you need to load images of people you wish to be recognised into simpliFRy. Each person can have 1 or more pictures.
-
-1. From the `simpliFRy/data` folder (created automatically when starting the app), create a new folder with all the images of the people you wish to be detected.
-
-2. In the `simpliFRy/data` folder, create a JSON file (name it whatever you want) that maps the image file name with the name of the person to be recognised.
-
-For example, if `john_doe1.jpg` and `john_doe2.png` are pictures of 'John Doe' while `caleb.png` is a picture of '3SG CALEB', and all images are in a folder called `pictures`, this is the directory structure.
+The `/data` directory is auto-created and contains:
 
 ```
-simpliFRy/
-├── data/
-|   ├── logs/
-|   ├── flags/
-|   |   ├── singapore_flag.png
-|   ├── pictures/
-|   |   ├── john_doe1.jpg
-|   |   ├── john_doe2.png
-|   |   └── caleb.png
-|   └── namelist.json
-└── other files and folders
+data/
+├── logs/              # Auto-generated application logs per session
+├── captures/          # Optional: captured frames during recognition
+├── flags/             # Flag images for display (optional)
+├── pictures/          # Reference images for people
+└── namelist.json      # Personnel mapping file
 ```
 
-`namelist.json` would look like this:
+**Important**: This directory is volume-mounted in Docker, making it the primary way to exchange data with the container.
 
-```json
-{
-    "img_folder_path": "pictures",
-    "details": [
-        {
-            "name": "John Doe",
-            "images": ["john_doe1.jpg", "john_doe2.png"],
-        },
-        {
-            "name": "3SG CALEB CHIA",
-            "images": ["caleb.png"],
-        }
-    ]
-}
+---
+
+## Advanced Configuration
+
+### Customization
+
+**Page Titles**: Edit HTML templates in `./templates/` to change page titles:
+```html
+<div class="title">YOUR CUSTOM TITLE</div>
 ```
 
-There are optional parameters that can be added to unlock more features. A "fully configured" JSON file would look something like this: 
+**Seating View Background**: Replace `./static/images/seats_bg.png` with your custom venue image.
 
-```json
-{
-    "img_folder_path": "pictures",
-    "flag_folder_path": "flags",
-    "details": [
-        {
-            "name": "John Doe",
-            "images": ["john_doe1.jpg", "john_doe2.png"],
-            "description": "someone",
-            "country_flag": "singapore_flag.png",
-            "table": "T1",
-            "tags": ["Army", "DIS"],
-            "priority": 2
-        },
-        {
-            "name": "3SG CALEB CHIA",
-            "images": ["caleb.png"],
-            "description": "someone else",
-            "country_flag": "singapore_flag.png",
-            "table": "VIP",
-            "tags": ["Air Force"],
-            "priority": 1
-        }
-    ]
-}
-```
+### Settings Page
 
-| Parameter | Type | Description | Required? |
-|-----------|--------|--------------------------|-------|
-|`img_folder_path`| String | The path to the folder with all the user images relative to `/data`| Y |
-|`flag_folder_path`| String | The path to the folder with all the country flags relative to `/data`| |
-|`name`| String | The display name of the user (must be unique!) | Y |
-|`images`| List[String] | List of image names within `img_folder_path`| Y |
-|`description`| List[String] | Optional description to be displayed alongside `name` | |
-|`country_flag`| String | Image name for the flag to be displayed on `/welcome` page | |
-|`table`| String | The table name that is used for the `/seats` table lighting functionality | |
-|`tags`| List[String] | Optional list of filter tags used in Gotendance | |
-|`priority`| Integer | Determines the sorting order in detection lists (lower number = shown first). If two people have the same priority or no priority is set, they are sorted alphabetically | |
+Access detailed FR algorithm settings at `/settings`:
 
+| Parameter | Type | Description |
+|-----------|------|-------------|
+|`name`| String | Display name (must be unique!) |
+|`images`| List | Image files for this person |
+|`description`| String | Optional description |
+|`country_flag`| String | Flag image name |
+|`table`| String | Table number (for `/seats` view) |
+|`tags`| List | Filter tags for Gotendance |
+|`priority`| Integer | Sort order (lower = first) |
 
-## Settings
-
-To adjust parameters used in the FR algorithm, go to <http://localhost:1333/settings>
-
-![simpliFRy settings page](assets/settings_page.png)
-
-For more information on the parameters, click [here](../Developer%20Guide.md#configuration)
-
-To adjust camera settings, refer to [this guide](../ReadME.md#recommended-hikvision-camera-settings).
-
-
-## Display Customization
-
-To customize titles for a page, go to the page's html file (e.g. `./templates/old_layout.html`), locate the title div and make the necessary changes: `<div class="title">MY NEW TITLE</div>` 
-
-For the `/seats` page, the image can be changed by replacing the image in `./static/images/seats_bg.png` with any other image (keep the file name the same!).
+For detailed parameter documentation, see the [Developer Guide](./Developer%20Guide.md#configuration).

@@ -9,18 +9,10 @@ A lightweight attendance tracking application built with Go that processes real-
 ## Table of Contents
 
 - [Overview](#overview)
-- [Key Features](#key-features)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Building from Source](#building-from-source)
-  - [Distribution](#distribution)
-- [How to Use](#how-to-use)
-  - [Starting the Application](#starting-the-application)
-  - [Loading Personnel Data](#loading-personnel-data)
-  - [Connecting Result Streams](#connecting-result-streams)
-  - [Viewing and Managing Attendance](#viewing-and-managing-attendance)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Usage](#usage)
 - [API Endpoints](#api-endpoints)
-- [For Developers](#for-developers)
 
 ---
 
@@ -37,210 +29,200 @@ The application listens to real-time result streams (such as facial recognition 
 
 ---
 
-## Key Features
+## Installation
 
-### 🚀 Easy Installation and Deployment
+> For complete setup instructions including Docker, refer to the [main README](../ReadME.md#installation--setup)
 
-Golang programs compile to a single binary executable, and the vanilla JavaScript UI runs in any modern browser without needing Node.js or other JavaScript runtimes. Once built, the application can be distributed by simply copying:
-- The executable file (`gotendance.exe`)
-- The `templates` folder
-- The `static` folder
+### Quick Start
 
-No installation process is needed on the target machine.
+**Using Docker (Recommended):**
+```bash
+docker compose up gotendance
+```
 
----
+**For Local Development:**
+```bash
+cd gotendance
+go build
+./gotendance.exe  # Linux/macOS: ./gotendance
+```
 
-## Getting Started
+Access at **http://localhost:1500**
 
 ### Prerequisites
-
-- [Go](https://go.dev/doc/install) (version 1.16 or later)
-
-### Building from Source
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/CJBuzz/Real-time-FRS-2.0.git
-   ```
-
-2. Navigate to the gotendance directory:
-   ```bash
-   cd gotendance
-   ```
-
-3. Build the executable:
-   ```bash
-   go build
-   ```
-
-This will generate a `gotendance.exe` file (on Windows) or `gotendance` binary (on Linux/Mac).
-
-### Distribution
-
-Once built, the application can be distributed as a self-contained package. Copy these items together:
-
-```
-folder/
-├── static/          # CSS, JavaScript, and other static assets
-├── templates/       # HTML templates for the web interface
-└── gotendance.exe   # The compiled executable
-```
-
-Ensure all three components remain in the same directory. The application will run on any machine without requiring Go to be installed.
+- Go 1.23.0+ (for local development)
+- Docker & Docker Compose (for containerized setup)
 
 ---
 
-## How to Use
+## Usage
 
-### Starting the Application
+### Web Interface
 
-1. Run the executable:
-   - **Windows**: Double-click `gotendance.exe`
-   - **Linux/Mac**: Run `./gotendance` in terminal
+1. **Load Personnel Data** (home page):
+   - Upload a JSON file with personnel details
+   - Same format as SimpliFRy's namelist
 
-2. The server will start on port 1500
+2. **Connect to Recognition Stream**:
+   - Enter the SimpliFRy results URL
+   - **In Docker**: `http://simplifry:1333/api/frResults`
+   - **On Host**: `http://host.docker.internal:1333/api/frResults`
+   - **External**: `http://192.168.x.x:1333/api/frResults`
 
-3. Open your web browser and navigate to:
-   ```
-   http://localhost:1500
-   ```
-   or
-   ```
-   http://127.0.0.1:1500
-   ```
+3. **Attendance Management**:
+   - View real-time recognized individuals
+   - Manually adjust attendance records
+   - View attendance summary by count
 
-   > **Recommended browser**: Chromium-based browser
+4. **Export Records**:
+   - Download attendance data in JSON format
+   - Historical data persisted to `output.json`
 
-### Loading Personnel Data
+### Expected Input Format
 
-![Home Page](assets/main_page.png)
+SimpliFRy must stream JSON in this format:
 
-1. On the home page, locate the **Load Personnel List** section
+```json
+{
+  "data": [
+    {"label": "John Doe"},
+    {"label": "Jane Smith"}
+  ]
+}
+```
 
-2. Prepare a JSON file with the personnel list in the following format:
-   ```json
-   {
-      "details": [
-         {
-               "name": "John Doe",
-               "tags": ["Army", "DIS"], // optional
-         },
-         {
-               "name": "3SG CALEB CHIA",
-               "tags": ["Air Force"], // optional
-         }
-      ]
-   }
-   ```
-   
-   A sample file is provided at `assets/test.json`. For more details on data preparation, see the [simpliFRy data preparation guide](../simpliFRy/ReadME.md#data-preparation). The same JSON file can be used for SimpliFRy and Gotendance!
-
-3. Click the file input, select your JSON file, and click the upload icon
-
-4. The personnel list will be loaded into the system
-
-### Connecting Result Streams
-
-Gotendance listens to HTTP streaming responses from services like simpliFRy to automatically update attendance records.
-
-1. **Ensure your result stream service is running** (e.g., simpliFRy)
-
-2. In the **FR Results Stream URL** section, enter the stream URL:
-   - For simpliFRy: `http://<IP>:<PORT>/api/frResults`
-   - Example: `http://192.168.1.100:5000/api/frResults`
-   
-   The stream should provide data in this format:
-   ```json
-   {
-     "data": [
-       {"label": "John Doe"},
-       {"label": "Jane Smith"}
-     ]
-   }
-   ```
-
-3. Set the **Update Interval** (in seconds):
-   - This controls how often gotendance processes the incoming stream. 
-   - Lower values = more frequent updates
-
-4. Click **Submit** to add the stream
-
-5. **Managing streams**:
-   - Successfully added streams appear under **Results Stream** section
-   - Multiple streams can be added and will be processed concurrently
-   - To remove a stream, click the remove button next to its URL
-   - Gotendance will immediately stop listening to removed streams
-
-### Viewing and Managing Attendance
-
-![Records Page](assets/records.png)
-
-1. Navigate to the records page:
-   ```
-   http://localhost:1500/records
-   ```
-
-2. **Understanding the display**:
-   - Names with a ✓ checkmark have been detected by the recognition system
-   - The checkbox icon shows the current attendance status
-
-3. **Manual attendance management**:
-   - Click any checkbox to toggle between Present/Absent
-   - This allows manual overrides when needed (e.g., for technical issues or special cases)
-
-4. **Resetting attendance**:
-   - Use the reset function on the home page to clear all attendance records
-   - Useful for starting a new session or event
-
-5. **Exporting data**:
-   - Attendance records are automatically saved to `output.json`
-   - Records persist across application restarts
+Gotendance automatically:
+- Parses the streaming response
+- Matches labels to loaded personnel
+- Updates attendance records in real-time
+- Persists state to `output.json`
 
 ---
 
 ## API Endpoints
 
-For developers integrating gotendance with other services, the following REST API endpoints are available:
+All endpoints return `{"status": "ok"}` on success. Stream data is auto-loaded from `output.json` on startup.
 
-### GET `/fetchAttendance`
-Fetch current attendance list with detection details
-- **Response**: JSON object with attendance status, detection status, and timestamps for each person
+### Data Management
 
-### POST `/changeAttendance?name={name}`
-Toggle attendance status for a specific person
-- **Parameters**: `name` (query parameter, must match exact name in system)
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/initData` | POST | Load personnel list from JSON file |
+| `/fetchAttendance` | GET | Retrieve current attendance records |
+| `/getCount` | GET | Get attendance count summary |
+| `/changeAttendance` | POST | Manually update attendance status |
+| `/resetAttendance` | POST | Clear all attendance records |
 
-### GET `/getCount`
-Get summary statistics
-- **Response**: Total count, detected count, and attended count
+### Stream Management
 
-### POST `/initData`
-Load personnel list from JSON file
-- **Body**: Multipart form with JSON file
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/startCollate` | POST | Start listening to a result stream |
+| `/stopCollate` | POST | Stop listening to a stream |
+| `/getStreamsList` | GET | List active streams |
 
-### POST `/startCollate`
-Add a new result stream
-- **Parameters**: `frUrl` (string), `updateInterval` (float)
+### Static Files
 
-### POST `/stopCollate?frUrl={url}`
-Remove a result stream
-- **Parameters**: `frUrl` (query parameter)
+`/static/` - Serves CSS, JavaScript, and image assets
+`/records` - View attendance records page
+`/` - Home/main interface 
+   - Lower values = more frequent updates
 
-### POST `/resetAttendance`
-Reset all attendance records to absent
+4. Click **Submit** to add the stream
 
-For detailed API documentation and information on creating custom result streams, refer to the [Developer Guide](Developer%20Guide.md).
+### 1. Create Personnel JSON
+
+Use the same JSON format as SimpliFRy:
+
+```json
+{
+  "details": [
+    {
+      "name": "John Doe",
+      "tags": ["Army", "Combat"],
+      "description": "Commander"
+    },
+    {
+      "name": "3SG CALEB",
+      "tags": ["Air Force"]
+    }
+  ]
+}
+```
+
+### 2. Start Attendance Tracking
+
+1. Upload the JSON file via home page
+2. Connect to SimpliFRy's streaming endpoint
+3. Gotendance automatically builds attendance as faces are recognized
+4. View records at `/records` page
+
+### 3. Manual Adjustments
+
+- Click checkboxes on `/records` page to toggle attendance
+- Use "Reset Attendance" button to clear all records
+- Changes persist to `output.json` automatically
 
 ---
 
-## For Developers
+## API Endpoints
 
-If you are a developer looking to:
-- Understand the internal architecture
-- Create custom result streams
-- Integrate gotendance with other services
-- Build additional features
+### Detailed Endpoint Reference
 
-Please refer to the comprehensive [Developer Guide](Developer%20Guide.md) for detailed technical documentation.
+**POST `/initData`**
+- Load personnel list from JSON file
+- Body: Multipart form data with `jsonFile` field
 
-To reset the attendance, repeat *Step 1*.
+**GET `/fetchAttendance`**
+- Returns current attendance records with detection status
+- Response: `{"attendance": {...}, "personnel": [...]}`
+
+**POST `/changeAttendance?name={name}`**
+- Toggle attendance status for a person
+- Query: `name` (must match exactly)
+
+**GET `/getCount`**
+- Attendance summary statistics
+- Response: `{"total": N, "detected": N, "attended": N}`
+
+**POST `/startCollate`**
+- Start listening to a result stream
+- Body: `frUrl` and `updateInterval` (float, in seconds)
+
+**POST `/stopCollate?frUrl={url}`**
+- Stop listening to a stream
+- Query: `frUrl` (exact stream URL)
+
+**POST `/resetAttendance`**
+- Clear all attendance records
+- Response: `{"status": "ok"}`
+
+**GET `/records`**
+- Renders attendance records page in browser
+
+---
+
+## Deployment Notes
+
+### Portable Binary Distribution
+
+To distribute Gotendance as a standalone package:
+
+```
+gotendance-package/
+├── static/              # CSS, JavaScript, assets
+├── templates/           # HTML templates
+├── gotendance.exe       # Compiled binary (Windows)
+└── output.json          # Persisted attendance data
+```
+
+No additional dependencies required—just copy and run.
+
+### Integration with SimpliFRy
+
+When using SimpliFRy as the recognition source:
+- SimpliFRy's `/api/frResults` endpoint streams recognition data
+- Gotendance consumes and persists this stream
+- Both apps share the same personnel JSON format
+
+For architectural details and advanced integration, see the [Developer Guide](Developer%20Guide.md).

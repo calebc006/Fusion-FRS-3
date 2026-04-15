@@ -1,0 +1,36 @@
+services:
+  simplifry:
+    image: simplifry:v3.1
+    build: 
+      context: ./simpliFRy
+      dockerfile: dockerfile
+    ports:
+      - "1333:1333"
+    volumes:
+      - ./simpliFRy/data:/app/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    env_file:
+      - ./simpliFRy/.env
+    environment:
+      - APP_ENV=production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  gotendance:
+    image: gotendance:v3.1
+    build:
+      context: ./gotendance
+      dockerfile: dockerfile
+    ports:
+      - "1500:1500"
+    depends_on:
+      - simplifry
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+

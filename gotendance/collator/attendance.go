@@ -1,9 +1,12 @@
 package collator
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"log"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -17,6 +20,7 @@ type Record struct {
 	LastSeen    time.Time `json:"lastSeen"`
 	ReferenceID string    `json:"referenceid"`
 	Tags        []string  `json:"tags"`
+	Order       int       `json:"order"`
 }
 
 type Store struct {
@@ -149,13 +153,68 @@ func (store *Store) JsonOut() ([]byte, error) {
 func (store *Store) JsonSave(filename string) {
 	jsonData, err := store.JsonOut()
 	if err != nil {
-		log.Printf("Error marshaling to JSON: %v", err)
+		return
 	}
 
-	err = os.WriteFile(filename, jsonData, 0644)
-	if err != nil {
-		log.Printf("Error writing to file: %v", err)
+	_ = os.WriteFile(filename, jsonData, 0644)
+}
+
+func (store *Store) CsvOut() ([]byte, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	// Collect all records in a slice for consistent ordering
+	var records []Record
+	for _, record := range store.Items {
+		records = append(records, record)
 	}
+
+	// Sort by Order field to maintain JSON file order
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].Order < records[j].Order
+	})
+
+	// Create a CSV writer
+	var b strings.Builder
+	w := csv.NewWriter(&b)
+
+	// Write header
+	header := []string{"Name", "Attendance", "Detected", "FirstSeen", "LastSeen", "ReferenceID", "Tags"}
+	if err := w.Write(header); err != nil {
+		return nil, err
+	}
+
+	// Write records
+	for _, record := range records {
+		row := []string{
+			record.Name,
+			strconv.FormatBool(record.Attendance),
+			strconv.FormatBool(record.Detected),
+			record.FirstSeen.Format(time.RFC3339),
+			record.LastSeen.Format(time.RFC3339),
+			record.ReferenceID,
+			strings.Join(record.Tags, ";"),
+		}
+		if err := w.Write(row); err != nil {
+			return nil, err
+		}
+	}
+
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return nil, err
+	}
+
+	return []byte(b.String()), nil
+}
+
+func (store *Store) CsvSave(filename string) {
+	csvData, err := store.CsvOut()
+	if err != nil {
+		return
+	}
+
+	_ = os.WriteFile(filename, csvData, 0644)
 }
 
 func (store *Store) LoadJSON(bytes []byte) error {
@@ -179,10 +238,11 @@ func (store *Store) LoadJSON(bytes []byte) error {
 	store.Items = make(map[string]Record)
 
 	// Loop through the details (person) from the uploaded JSON
-	for _, person := range jsonData.Details {
+	for index, person := range jsonData.Details {
 		record := Record{
-			Name:       person.Name,
-			Tags:       person.Tags,
+			Name:  person.Name,
+			Tags:  person.Tags,
+			Order: index,
 		}
 
 		// Preserve attendance, detected, and timestamps from previous session if person still exists
@@ -191,6 +251,7 @@ func (store *Store) LoadJSON(bytes []byte) error {
 			record.Detected = oldRecord.Detected
 			record.FirstSeen = oldRecord.FirstSeen
 			record.LastSeen = oldRecord.LastSeen
+			record.Order = oldRecord.Order
 		} else {
 			record.Attendance = false
 			record.Detected = false

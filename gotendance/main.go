@@ -12,6 +12,7 @@ import (
 )
 
 var recordFilename = "output.json"
+var csvExportFilename = "attendance.csv"
 
 func generateOKRes() map[string]string {
 	return map[string]string{
@@ -47,7 +48,7 @@ func loadData(store *collator.Store) http.HandlerFunc {
 			return
 		}
 
-		log.Printf("Loaded data from JSON file")
+		store.JsonSave(recordFilename)
 
 		response := generateOKRes()
 		w.Header().Set("Content-Type", "application/json")
@@ -88,7 +89,7 @@ func startCollateHandler(store *collator.Store, streamsList *collator.StreamsLis
 
 		stopChan := streamsList.AddStreamSrc(url, updateInterval)
 		if stopChan != nil {
-			go collator.Stream(store, stopChan, url, updateInterval)
+			go collator.Stream(store, stopChan, url, updateInterval, recordFilename)
 		}
 
 		response := generateOKRes()
@@ -120,6 +121,7 @@ func stopCollateHandler(streamsList *collator.StreamsList) http.HandlerFunc {
 func resetAttendanceHandler(store *collator.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		store.ResetAllAttendance()
+		store.JsonSave(recordFilename)
 
 		response := generateOKRes()
 		w.Header().Set("Content-Type", "application/json")
@@ -142,10 +144,28 @@ func fetchHandler(store *collator.Store) http.HandlerFunc {
 			return
 		}
 
-		store.JsonSave(recordFilename)
-
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonData)
+	}
+}
+
+func exportAttendanceCSVHandler(store *collator.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET")
+
+		csvData, err := store.CsvOut()
+		if err != nil {
+			log.Printf("Error marshaling to CSV: %v", err)
+			http.Error(w, "Error marshaling to CSV", http.StatusInternalServerError)
+			return
+		}
+
+		store.CsvSave(csvExportFilename)
+
+		w.Header().Set("Content-Type", "text/csv")
+		w.Header().Set("Content-Disposition", "attachment; filename=attendance.csv")
+		w.Write(csvData)
 	}
 }
 
@@ -157,6 +177,7 @@ func changeAttendanceHandler(store *collator.Store) http.HandlerFunc {
 		queryParams := r.URL.Query()
 		name := queryParams.Get("name")
 		store.Mark(name)
+		store.JsonSave(recordFilename)
 
 		response := generateOKRes()
 		w.Header().Set("Content-Type", "application/json")
@@ -254,6 +275,7 @@ func main() {
 
 	http.HandleFunc("/changeAttendance", changeAttendanceHandler(store))
 	http.HandleFunc("/fetchAttendance", fetchHandler(store))
+	http.HandleFunc("/exportAttendanceCSV", exportAttendanceCSVHandler(store))
 	http.HandleFunc("/getCount", getCountHandler(store))
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))

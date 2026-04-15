@@ -83,18 +83,15 @@ func (streamsList *StreamsList) FetchList() []StreamSrc {
 }
 
 
-func handleResult(result []Detection, store *Store) {
-	// if len(result) > 0 {
-	// 	log.Printf("Processing %d detections", len(result))
-	// }
+func handleResult(result []Detection, store *Store, filename string) {
 	for _, detection := range result {
-		log.Printf("Detected: %s (score: %.2f)", detection.Label, detection.Score)
 		store.Check(detection.Label)
 	}
+	store.JsonSave(filename)
 }
 
 
-func Stream(store *Store, stopChan chan struct{}, resultsUrl string, updateInterval time.Duration) {
+func Stream(store *Store, stopChan chan struct{}, resultsUrl string, updateInterval time.Duration, filename string) {
 	var (
 		detections_queue = make(map[string]Detection)
 		mu sync.Mutex
@@ -112,7 +109,7 @@ func Stream(store *Store, stopChan chan struct{}, resultsUrl string, updateInter
 			case <-ticker.C:
 				mu.Lock()
 				for _, det := range detections_queue {
-					handleResult([]Detection{det}, store)
+					handleResult([]Detection{det}, store, filename)
 				}
 				detections_queue = make(map[string]Detection) // clear for next interval
 				mu.Unlock()

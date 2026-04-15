@@ -26,17 +26,16 @@
 
 ### Gotendance
 - Confirmed that we aren't dropping any detections, even with high update interval
+- Export as csv instead of json
 
 ## Future
 ### TODO:
 - [ ] Large scale setup testing for future events
 - [ ] Need for tuning of parameters
-- [ ] (low priority) ibpng warning: iCCP: known incorrect sRGB profile (warning during png decode, likely buggy pngs)
 
 ### Potential Changes
 - [ ] Convert all thresholds to cosine *similarity* (higher = better match)
+- [ ] Two separate FFMPEG processes for RAW and MJPEG streams for lower latency
 - [ ] Implement TLS (https) for safer multi-location implementation
-- [ ] Two separate FFMPEG processes for RAW and MJPEG streams
-- [ ] Lazy loading for reference images
 - [ ] Port over perf log to SimpliFRy
-- [ ] Manual marking in Gotendance should override auto-detection
+- [ ] Lazy loading for InteractiveFR reference images

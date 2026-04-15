@@ -55,3 +55,42 @@
 .reset-button:hover {
     background-color: #c0392b;
 }
+
+/* Streams section styling */
+#streams {
+    width: 100%;
+    margin-top: 20px;
+    text-align: center;
+}
+
+#streams .form {
+    margin-bottom: 20px;
+    gap: 0;
+}
+
+#streams .form .submit-button {
+    background-color: rgb(47, 79, 79);
+    color: white;
+    font-weight: 600;
+    padding: 12px 32px;
+    margin-bottom: 0;
+}
+
+#streams .form .submit-button:hover {
+    background-color: rgb(35, 65, 65);
+}
+
+#streams .form .submit-button:active {
+    background-color: rgb(25, 55, 55);
+}
+
+/* Light mode adjustments */
+@media (prefers-color-scheme: light) {
+    #streams .form .submit-button {
+        background-color: #3498db;
+    }
+    
+    #streams .form .submit-button:hover {
+        background-color: #2980b9;
+    }
+}

@@ -5,16 +5,29 @@
 }
 
 .submit-button {
-    padding: 0.8em 1.5em;
+    padding: 10px 24px;
     background-color: rgb(47, 79, 79);
-    border-radius: 1em;
-    border-width: 0;
-    color: var(--color-foreground)
+    border-radius: 8px;
+    border: none;
+    color: var(--color-foreground);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    margin-top: 0.5em;
 }
 
 .submit-button:hover {
     background-color: rgb(35, 65, 65);
-    cursor:pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+.submit-button:active {
+    background-color: rgb(25, 55, 55);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transform: translateY(0);
 }
 
 input {
@@ -29,20 +42,6 @@ input:focus {
     background-color: rgb(50,50,50);
     color: var(--color-foreground);
     border-width: 0;
-}
-
-@media (prefers-color-scheme: light) {
-    input, input:focus {
-        background-color: rgb(240, 240, 240);
-    }
-
-    .submit-button {
-        background-color: rgb(168, 201, 201);
-    }
-
-    .submit-button:hover {
-        background-color: rgb(111, 201, 201);
-    }
 }
 
 .text-input {
