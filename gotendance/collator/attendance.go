@@ -190,8 +190,8 @@ func (store *Store) CsvOut() ([]byte, error) {
 			record.Name,
 			strconv.FormatBool(record.Attendance),
 			strconv.FormatBool(record.Detected),
-			record.FirstSeen.Format(time.RFC3339),
-			record.LastSeen.Format(time.RFC3339),
+			record.FirstSeen.Local().Format(time.RFC3339),
+			record.LastSeen.Local().Format(time.RFC3339),
 			record.ReferenceID,
 			strings.Join(record.Tags, ";"),
 		}
@@ -275,9 +275,9 @@ func (store *Store) LoadPrevOutput(filename string) {
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Printf("File %s does not exist.", filename)
+			log.Printf("No previous data found at %s", filename)
 		} else {
-			log.Printf("Error opening file: %v", err)
+			log.Printf("Error opening %s: %v", filename, err)
 		}
 		return
 	}
@@ -302,5 +302,5 @@ func (store *Store) LoadPrevOutput(filename string) {
 		}
 	}
 
-	log.Printf("Loaded data from previous session")
+	log.Printf("Loaded %d records from %s", len(store.Items), filename)
 }

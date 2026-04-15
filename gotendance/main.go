@@ -12,7 +12,6 @@ import (
 )
 
 var recordFilename = "output.json"
-var csvExportFilename = "attendance.csv"
 
 func generateOKRes() map[string]string {
 	return map[string]string{
@@ -160,8 +159,6 @@ func exportAttendanceCSVHandler(store *collator.Store) http.HandlerFunc {
 			http.Error(w, "Error marshaling to CSV", http.StatusInternalServerError)
 			return
 		}
-
-		store.CsvSave(csvExportFilename)
 
 		w.Header().Set("Content-Type", "text/csv")
 		w.Header().Set("Content-Disposition", "attachment; filename=attendance.csv")
