@@ -1,6 +1,6 @@
 services:
   simplifry:
-    image: simplifry:v3.1
+    image: simplifry:v3.2
     build: 
       context: ./simpliFRy
       dockerfile: dockerfile
@@ -23,7 +23,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   gotendance:
-    image: gotendance:v3.1
+    image: gotendance:v3.2
     build:
       context: ./gotendance
       dockerfile: dockerfile

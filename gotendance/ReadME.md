@@ -2,7 +2,7 @@
 
 A lightweight attendance tracking application built with Go that processes real-time results from facial recognition systems.
 
-![Project Logo](static/favicon.ico)
+![Project Logo](./static/favicon.ico)
 
 ---
 
@@ -225,4 +225,4 @@ When using SimpliFRy as the recognition source:
 - Gotendance consumes and persists this stream
 - Both apps share the same personnel JSON format
 
-For architectural details and advanced integration, see the [Developer Guide](Developer%20Guide.md).
+

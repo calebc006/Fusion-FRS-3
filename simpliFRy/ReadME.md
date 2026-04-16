@@ -7,11 +7,10 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [Architecture](#architecture)
 - [Installation](#installation)
 - [Pages & Endpoints](#pages--endpoints)
-- [Configuration](#configuration)
 - [Data Directory](#data-directory)
+- [Configuration](#configuration)
 - [Advanced Configuration](#advanced-configuration)
 
 ---
@@ -25,34 +24,24 @@ For the technical deep dive, see the [Developer Guide](./Developer%20Guide.md)
 
 ---
 
-## Architecture
-
-### Technology Stack
-- **Backend**: Python 3.10 + Flask web framework
-- **Face Detection**: [InsightFace](https://github.com/deepinsight/insightface) library (buffalo_l model)
-- **Embedding Search**: [Spotify Voyager](https://github.com/spotify/voyager) for approximate-nearest-neighbor search
-- **Video Processing**: FFmpeg integration
-- **Deployment**: Docker containers with optional GPU support (NVIDIA CUDA)
-
-### Key Components
-- **Video Stream Handler**: Manages RTSP/HTTP video input
-- **Face Detection Engine**: Detects faces and generates embeddings
-- **Result Broadcaster**: Streams recognition results via HTTP streaming
-- **Attendance Manager**: Optionally integrates with Gotendance via `/api/frResults` endpoint
-
----
-
 ## Installation
 
-> For complete setup instructions including Docker, refer to the [main README](../ReadME.md#installation--setup)
+> For complete setup instructions including Gotendance, refer to the [main README](../ReadME.md#installation--setup-simplifry--gotendance)
 
-### Quick Start
+### Prerequisites
+- [Docker](https://www.docker.com/products/docker-desktop/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- [Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (for GPU support in Docker)
+- [Python 3.10+](https://www.python.org/downloads/) (for local development without Docker)
+- [FFmpeg 8.0.1+ ](https://ffmpeg.org/download.html) 
+
+
+### Quick Start (only for SimpliFRy)
 
 **Using Docker (Recommended):**
 ```bash
 cd simpliFRy
-docker compose build
-docker compose up
+docker compose build simplifry
+docker compose up simplifry
 ```
 
 **For Local Development:**
@@ -65,13 +54,9 @@ python app.py
 
 Access the application at **http://localhost:1333**
 
-### Prerequisites
-- Python 3.10+ (for local development)
-- Docker & Docker Compose (for containerized setup)
-- NVIDIA Container Toolkit (optional, for GPU support)
-- FFmpeg 8.0.1+ (required)
+The `buffalo_l` model will auto-install on first run. A copy of `buffalo_l.zip` is also provided in the `/simpliFRy` directory.
 
-The `buffalo_l` model will auto-install on first run. A copy of `buffalo_l.zip` is available in the root directory.
+---
 
 ## Pages & Endpoints
 
@@ -87,6 +72,24 @@ The `buffalo_l` model will auto-install on first run. A copy of `buffalo_l.zip` 
 - `GET /api/frResults` - HTTP streaming endpoint for real-time recognition results  
   - Used by Gotendance to track attendance
   - Returns JSON stream of detected faces with labels
+
+---
+
+## Data Directory
+
+The `/data` directory is auto-created and contains:
+
+```
+data/
+├── logs/              # Auto-generated application logs per session
+├── flags/             # Flag images for display (optional)
+├── pictures/          # Reference images for people
+└── namelist.json      # Personnel mapping file
+```
+
+**Important**: This directory is volume-mounted in Docker, making it the primary way to exchange data with the container.
+
+> For instructions to setup images and JSON file, refer to the [main ReadME](../ReadME.md#data-preparation). 
 
 ---
 
@@ -113,28 +116,21 @@ INFERENCE_HEIGHT=480      # Model input height
 
 ### Runtime Settings (via UI)
 
-Adjustable in the `/settings` page:
-- Recognition threshold
-- Face detection confidence  
-- Embedding search sensitivity
-- Display and logging preferences
+Access detailed FR algorithm settings at `/settings`
 
----
+![alt text](../assets/settings_page.png)
 
-## Data Directory
+> For detailed parameter documentation, see the [Developer Guide](./Developer%20Guide.md#configuration).
 
-The `/data` directory is auto-created and contains:
+### Recommended HIKVISION Camera Settings
 
-```
-data/
-├── logs/              # Auto-generated application logs per session
-├── captures/          # Optional: captured frames during recognition
-├── flags/             # Flag images for display (optional)
-├── pictures/          # Reference images for people
-└── namelist.json      # Personnel mapping file
-```
+In Fusion Company, we typically use HIKVISION IP cameras to provide RTSP input during deployment. As of Feb 2026, we use the HIKVISION iDS-2CD7A46G0-IZHS. 
 
-**Important**: This directory is volume-mounted in Docker, making it the primary way to exchange data with the container.
+Video settings can be adjusted in the HIKVISION Video Management Software, which can be accessed by typing the IP address of the camera into the search bar of your browser. These are the typical settings we use, to balance low-latency and acceptable video quality.
+
+![Video Settings](../assets/image.png)
+
+Image settings can also be changed to adjust exposure, contrast, dynamic range and more. These should be tuned to ensure a clear image given the lighting conditions of the deployment site. 
 
 ---
 
@@ -148,19 +144,3 @@ data/
 ```
 
 **Seating View Background**: Replace `./static/images/seats_bg.png` with your custom venue image.
-
-### Settings Page
-
-Access detailed FR algorithm settings at `/settings`:
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-|`name`| String | Display name (must be unique!) |
-|`images`| List | Image files for this person |
-|`description`| String | Optional description |
-|`country_flag`| String | Flag image name |
-|`table`| String | Table number (for `/seats` view) |
-|`tags`| List | Filter tags for Gotendance |
-|`priority`| Integer | Sort order (lower = first) |
-
-For detailed parameter documentation, see the [Developer Guide](./Developer%20Guide.md#configuration).

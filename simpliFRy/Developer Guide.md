@@ -1,25 +1,43 @@
-# Developer's Guide 
+# SimpliFRy Developer's Guide 
 
 Technical documentation for SimpliFRy's facial recognition pipeline, tuning parameters, and API integration.
 
 ## Table of Contents
 
-- [Developer's Guide for SimpliFRy](#developers-guide-for-simplifry)
-  - [Table of Contents](#table-of-contents)
-  - [FR Algorithm](#fr-algorithm)
-  - [Enhancement: Differentiator](#enhancement-differentiator)
-  - [Enhancement: Persistor](#enhancement-persistor)
-  - [Configuration](#configuration)
-  - [API Endpoints](#api-endpoints)
-  - [Performance Optimizations](#performance-optimizations)
+- [Architecture](#architecture)
+- [FR Algorithm](#fr-algorithm)
+- [Enhancement: Differentiator](#enhancement-differentiator)
+- [Enhancement: Persistor](#enhancement-persistor)
+- [Configuration](#configuration)
+- [API Endpoints](#api-endpoints)
+- [Performance Optimizations](#performance-optimizations)
 
 ---
+
+
+## Architecture
+
+### Technology Stack
+- **Backend**: Python 3.10 + Flask web framework
+- **Face Detection**: [InsightFace](https://github.com/deepinsight/insightface) library (buffalo_l model)
+- **Embedding Search**: [Spotify Voyager](https://github.com/spotify/voyager) for approximate-nearest-neighbor search
+- **Video Processing**: FFmpeg integration
+- **Deployment**: Docker containers with optional GPU support (NVIDIA CUDA)
+
+### Key Components
+- **Video Stream Handler**: Manages RTSP/HTTP video input
+- **Face Detection Engine**: Detects faces and generates embeddings
+- **Result Broadcaster**: Streams recognition results via HTTP streaming
+- **Attendance Manager**: Optionally integrates with Gotendance via `/api/frResults` endpoint
+
+---
+
 
 ## FR Algorithm
 
 ### Core Pipeline
 
-![FR Algorithm Diagram](./simpliFRy/assets/fr_algorithm.jpg)
+![FR Algorithm Diagram](../assets/fr_algorithm.jpg)
 
 1. **Database Indexing**: Face images are embedded via InsightFace and indexed in Voyager vector store (or stored as numpy array for brute force)
 2. **Face Detection**: Query image → InsightFace detects faces, produces embeddings
@@ -58,7 +76,7 @@ Handles head rotation/minor pose changes within a frame sequence. When a face fa
 
 **Execution Order**: Core FR → Differentiator → Persistor
 
-![Persistor Diagram](./simpliFRy/assets/persistor.JPG)
+![Persistor Diagram](../assets/persistor.JPG)
 
 **Note**: Currently uses Intersection-Over-Union for position matching; consider DeepSORT for better temporal tracking. Can be disabled in settings if unreliable for your use case.
 
@@ -66,7 +84,7 @@ Handles head rotation/minor pose changes within a frame sequence. When a face fa
 
 ## Configuration
 
-Tunable parameters via `/submit_settings` endpoint. Settings are saved to `settings.json` All parameters are optional; unspecified values retain current settings.
+Tunable parameters on  `/settings` page on the frontend (via `/api/submit_settings` endpoint). Settings are saved to `settings.json` All parameters are optional; unspecified values retain current settings.
 
 ### Core Parameters
 
@@ -102,7 +120,7 @@ Tunable parameters via `/submit_settings` endpoint. Settings are saved to `setti
 ## API Endpoints
 
 ### 1. Start FR
-**`POST /start`** - Start video stream and FR inference
+**`POST /api/start`** - Start video stream and FR inference
 
 **Request** (form-data):
 - `stream_src` (required): RTSP URL
@@ -120,7 +138,7 @@ Tunable parameters via `/submit_settings` endpoint. Settings are saved to `setti
 ---
 
 ### 2. End FR
-**`POST /end`** - Stop video stream and FR inference
+**`POST /api/end`** - Stop video stream and FR inference
 
 **Response**:
 ```json
@@ -131,14 +149,14 @@ Tunable parameters via `/submit_settings` endpoint. Settings are saved to `setti
 ---
 
 ### 3. Check FR Status
-**`GET /checkAlive`** - Check if FR is running
+**`GET /api/checkAlive`** - Check if FR is running
 
 **Response**: `"Yes"` or `"No"` (plain text)
 
 ---
 
 ### 4. Video Feed
-**`GET /vidFeed`** - HTTP stream of annotated video
+**`GET /api/vidFeed`** - HTTP stream of annotated video
 
 **Response**: `multipart/x-mixed-replace; boundary=frame`
 
@@ -150,7 +168,7 @@ Tunable parameters via `/submit_settings` endpoint. Settings are saved to `setti
 ---
 
 ### 5. FR Results
-**`GET /frResults`** - HTTP stream of detection results
+**`GET /api/frResults`** - HTTP stream of detection results
 
 **Response**: `application/json` stream
 ```json
@@ -173,7 +191,7 @@ Tunable parameters via `/submit_settings` endpoint. Settings are saved to `setti
 ---
 
 ### 6. Update Settings
-**`POST /submit_settings`** - Modify FR configuration
+**`POST /api/submit_settings`** - Modify FR configuration
 
 **Request** (form-data): See [Configuration](#configuration) table for all parameters
 
