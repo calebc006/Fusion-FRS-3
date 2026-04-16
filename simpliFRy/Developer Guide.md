@@ -84,7 +84,7 @@ Handles head rotation/minor pose changes within a frame sequence. When a face fa
 
 ## Configuration
 
-Tunable parameters on  `/settings` page on the frontend (via `/api/submit_settings` endpoint). Settings are saved to `settings.json` All parameters are optional; unspecified values retain current settings.
+Tunable parameters on  `/settings` page on the frontend (via `/api/submit_settings` endpoint). Settings are saved to `settings.json`. All parameters are optional; unspecified values retain current settings.
 
 ### Core Parameters
 

@@ -1,6 +1,6 @@
 # Real-time Facial Recognition System 3
 
-![Project Logo](./assets/fusionlogo.png)
+<img src="assets/fusionlogo.png" width="200" alt="Project Logo" />
 
 
 ## Description
