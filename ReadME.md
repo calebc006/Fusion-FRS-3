@@ -74,6 +74,11 @@ For a detailed list of changes, refer to the [changelog](./changelog.md).
    - **SimpliFRy**: http://localhost:1333
    - **Gotendance**: http://localhost:1500
 
+### Docker Desktop View:
+
+![alt text](./assets/docker.png)
+Check that both containers are running! The containers can also be started from the Docker Desktop app.
+
 ### Local Development Setup
 
 **SimpliFRy:**
@@ -98,25 +103,22 @@ go build
 
 ## Usage
 
-### Docker Desktop View:
-
-![alt text](./assets/docker.png)
 
 Once both containers are running,
 
 #### SimpliFRy (Port 1333)
 1. Open http://localhost:1333 in your browser
-2. Load a personnel dataset (see [Data Preparation](#data-preparation))
-3. Start a video stream from your camera
-4. Begin facial recognition
+2. Load a personnel JSON file (see [Data Preparation](#data-preparation))
+3. Follow instructions on the UI to connect to a video stream
+4. Begin facial recognition!
 
 #### Gotendance (Port 1500)
 1. Open http://localhost:1500 in your browser
 2. Load the same personnel dataset
 3. Connect to SimpliFRy's result stream:
    - **URL**: `http://<my.ip.address>:1333/api/frResults`
-   - This uses the Docker service name for container-to-container communication
-4. Gotendance will automatically track attendance as SimpliFRy recognizes faces
+   - Multiple result streams can be connected to Gotendance.
+4. Gotendance will automatically track attendance based on detections from the connected SimpliFRy result streams
 
 #### Connecting Services
 

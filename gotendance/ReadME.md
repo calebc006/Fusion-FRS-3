@@ -159,9 +159,14 @@ Use the same JSON format as SimpliFRy:
 
 ### 3. Manual Adjustments
 
-- Click checkboxes on `/records` page to toggle attendance
+- Click checkboxes on `/records` page to toggle attendance manually
 - Use "Reset Attendance" button to clear all records
 - Changes persist to `output.json` automatically
+
+### 4. Exporting Data
+
+- Scroll to the bottom of the page to export attendance data as a `.csv` file.
+- The exported namelist will list names in the same order as the imported `.json` file.
 
 ---
 
