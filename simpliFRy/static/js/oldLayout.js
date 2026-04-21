@@ -4,7 +4,7 @@ import {
     getTable,
     getDescription,
     sortDetectionsByPriority,
-    fetchSettings 
+    fetchSettings, 
 } from "./utils.js";
 
 const detectionList = document.getElementById("detection-list");
@@ -14,7 +14,9 @@ let HOLD_TIME = 100;
 fetchSettings().then(settings => {
     HOLD_TIME = settings.holding_time * 1000; 
 });
+const VIP_HOLD_TIME = 4000;
 const activeDetections = new Map(); // name -> { lastSeen, detection }
+let VIPs = []; // store names of VIPs
 
 window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("video-feed").setAttribute("data", `/api/vidFeed?t=${Date.now()}`);
@@ -23,6 +25,13 @@ window.addEventListener("DOMContentLoaded", () => {
     loadNamelistJSON(namelistPath).then((data) => {
         namelistJSON = data;
         fetchDetections();
+
+        // Populate VIPs
+        namelistJSON?.details?.forEach(person => {
+            if (person && person.tags && person.tags.includes("VIP")) {
+                VIPs.push(person.name.toUpperCase());
+            }
+        })
     });
 });
 
@@ -100,7 +109,12 @@ const updateDetectionList = (data) => {
 
     // Remove expired detections
     for (const [name, entry] of activeDetections.entries()) {
-        if (now - entry.lastSeen > HOLD_TIME) {
+        if (VIPs.includes(name)) {
+            if (now - entry.lastSeen > VIP_HOLD_TIME) {
+                activeDetections.delete(name);
+            }
+        }  
+        else if (now - entry.lastSeen > HOLD_TIME) {
             activeDetections.delete(name);
         }
     }
@@ -109,8 +123,6 @@ const updateDetectionList = (data) => {
     let detections = [];
 
     for (const [name, entry] of activeDetections.entries()) {
-        let table = getTable(name, namelistJSON);
-
         let description = getDescription(name, namelistJSON);
 
         let detectionEl = document.createElement("div");
@@ -118,7 +130,7 @@ const updateDetectionList = (data) => {
         detectionEl.dataset.name = name;
 
         detectionEl.innerHTML = `
-            <span class="detection-name">${name} ${table ? `(${table})` : ""}</span>
+            <span class="detection-name${VIPs.includes(name) ? " vip-name" : ""}">${name}</span>
             ${description ? `<span class="detection-desc">${description}</span>` : ""}
         `;
 

@@ -49,8 +49,12 @@ body {
 }
 
 .detection-element .detection-name {
-    font-size: 45px;
+    font-size: 43px;
     font-weight: bold;
+}
+
+.detection-element .vip-name {
+    font-size: 55px;
 }
 
 .detection-element .detection-desc {
