@@ -23,7 +23,7 @@ from sql_db import get_db, recreate_table, fetch_records, save_record
 FR_SETTINGS_PATH = 'settings.json'
 EMBEDDINGS_CACHE_FP = 'embeddings_cache.json'
 FR_DEFAULT_SETTINGS = {
-    "threshold": 0.45, 
+    "threshold": 0.5, 
     "holding_time": 2, 
     "max_detections": 50, 
     "perf_logging": True, 

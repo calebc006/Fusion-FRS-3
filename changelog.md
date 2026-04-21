@@ -28,6 +28,19 @@
 - Confirmed that we aren't dropping any detections, even with high update interval
 - Export as csv instead of json
 
+## Branches
+
+STEF:
+- "VIP" tagged names are displayed more prominently and have longer holding time
+- VIPs will be assigned higher priority so they appear at the top of the screen
+- No table numbers
+- Background will be provided
+- Army Int logo -> SAF logo, add Anything but Regular logo
+
+6 Div WPS: 
+- No custom background, use old_layout
+- "ORANGE", "GREEN", "PINK" tables in oldLayout.js changes display name color
+
 ## Future
 ### TODO:
 - [ ] Large scale setup testing for future events
