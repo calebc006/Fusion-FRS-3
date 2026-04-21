@@ -122,17 +122,6 @@ const updateDetectionList = (data) => {
             ${description ? `<span class="detection-desc">${description}</span>` : ""}
         `;
 
-        // FOR MAY 2026 6 DIV WPS
-        if (table == "ORANGE") {
-            detectionEl.style.color = "orange";
-        }
-        if (table == "GREEN") {
-            detectionEl.style.color = "green";
-        }
-        if (table == "PINK") {
-            detectionEl.style.color = "#E25098";
-        }
-
         detections.push(detectionEl);
     }
 
