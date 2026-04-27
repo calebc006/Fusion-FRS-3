@@ -25,7 +25,7 @@ body {
 
 .detection-container {
     margin-top: 12vh;
-    width: 38vw;
+    width: 35vw;
     height: 80vh;
     display: flex;
     flex-direction: column;
@@ -39,13 +39,14 @@ body {
 }
 
 .detection-element {
-    max-width: 38vw;
+    max-width: 35vw;
     font-family: Helvetica, sans-serif;
     color: black;
     margin-bottom: 15px;
     text-align: center;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .detection-element .detection-name {
@@ -55,5 +56,6 @@ body {
 
 .detection-element .detection-desc {
     font-size: 30px;
-    opacity: 70%;
+    opacity: 90%;
+    font-weight: bold;
 }
