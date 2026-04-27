@@ -1,5 +1,11 @@
 # FRS 3 Changelog
 
+## stef-may26 branch
+- "VIP" tagged names are displayed in gold, slightly larger, and have 4sec holding time
+- VIPs will be assigned higher priority so they appear at the top of the screen
+- Use provided background
+- Logos -> Anything but Regular logo
+
 ## v3.2 (In testing, as of 270426)
 - UI updates, improved documentation
 - Updated docker compose configuration to include both Gotendance and SimpliFRy.
