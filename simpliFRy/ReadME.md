@@ -128,7 +128,7 @@ In Fusion Company, we typically use HIKVISION IP cameras to provide RTSP input d
 
 Video settings can be adjusted in the HIKVISION Video Management Software, which can be accessed by typing the IP address of the camera into the search bar of your browser. These are the typical settings we use, to balance low-latency and acceptable video quality.
 
-![Video Settings](../assets/image.png)
+![Video Settings](../assets/hikvision.png)
 
 Image settings can also be changed to adjust exposure, contrast, dynamic range and more. These should be tuned to ensure a clear image given the lighting conditions of the deployment site. 
 
@@ -143,4 +143,12 @@ Image settings can also be changed to adjust exposure, contrast, dynamic range a
 <div class="title">YOUR CUSTOM TITLE</div>
 ```
 
-**Seating View Background**: Replace `./static/images/seats_bg.png` with your custom venue image.
+**Seating View Background**: Replace `./static/images/seats_bg.png` with your custom venue image. 
+
+For a fully custom background, you would have to insert it into the body of the page. E.g.
+```html
+<body background="../static/images/bg_image.png" style="background-size: cover">
+  ...
+</body>
+
+```
