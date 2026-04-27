@@ -65,5 +65,6 @@ body {
 
 .detection-element .detection-desc {
     font-size: 30px;
-    opacity: 70%;
+    opacity: 90%;
+    font-weight: bold;
 }
