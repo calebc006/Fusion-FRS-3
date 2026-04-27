@@ -48,6 +48,7 @@ body {
     text-align: center;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .vip-element {
