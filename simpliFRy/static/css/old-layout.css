@@ -10,7 +10,7 @@ body {
     justify-content: space-between;
     align-items: center;
     position: absolute;
-    top: 13vh;
+    top: 13.6vh;
     width: 95vw;
 }
 
@@ -25,13 +25,14 @@ body {
 
 .detection-container {
     margin-top: 12vh;
-    width: 38vw;
+    width: 34.9vw;
     height: 80vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 0;
     z-index: 1;
+    margin-left: 5vw;
 }
 
 .detection-list {
@@ -39,22 +40,27 @@ body {
 }
 
 .detection-element {
-    max-width: 38vw;
+    max-width: 34.9vw;
+    overflow: hidden;
     font-family: Helvetica, sans-serif;
-    color: black;
+    color: white;
     margin-bottom: 15px;
     text-align: center;
     display: flex;
     flex-direction: column;
 }
 
+.vip-element {
+    color: #FFD31A;
+}
+
 .detection-element .detection-name {
-    font-size: 43px;
+    font-size: 42px;
     font-weight: bold;
 }
 
-.detection-element .vip-name {
-    font-size: 55px;
+.vip-element .detection-name {
+    font-size: 48px;
 }
 
 .detection-element .detection-desc {

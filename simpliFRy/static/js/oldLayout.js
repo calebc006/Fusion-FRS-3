@@ -127,10 +127,13 @@ const updateDetectionList = (data) => {
 
         let detectionEl = document.createElement("div");
         detectionEl.classList.add("detection-element");
+        if (VIPs.includes(name)) {
+            detectionEl.classList.add("vip-element");
+        }
         detectionEl.dataset.name = name;
 
         detectionEl.innerHTML = `
-            <span class="detection-name${VIPs.includes(name) ? " vip-name" : ""}">${name}</span>
+            <span class="detection-name">${name}</span>
             ${description ? `<span class="detection-desc">${description}</span>` : ""}
         `;
 

@@ -127,9 +127,13 @@ body {
     opacity: 70%;
 }
 
+.bats-logo {
+    height: 105px;
+}
+
 .fusion-logo {
     padding-top: 10px;
-    height: 80px;
+    height: 90px;
     width: auto;
     margin-right: 20px;
 }

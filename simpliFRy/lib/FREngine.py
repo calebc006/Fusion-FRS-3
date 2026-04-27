@@ -30,7 +30,7 @@ FR_DEFAULT_SETTINGS = {
     "frame_skip": 1, 
     "max_broadcast_fps": 50,
 
-    "use_differentiator": True, 
+    "use_differentiator": False, 
     "threshold_lenient_diff": 0.55,
     "similarity_gap": 0.10, 
 
