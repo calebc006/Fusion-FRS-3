@@ -92,7 +92,7 @@ Tunable parameters on  `/settings` page on the frontend (via `/api/submit_settin
 |-----------|-----|---------|-------|-------------|
 | **FR Threshold** | `threshold` | 0.5 | [0.10, 0.90], step 0.01 | Max cosine distance for face match. Higher = more lenient |
 | **Holding Time** | `holding_time` | 2 | [0, 100]s, step 0.1 | Duration to hold frontend display of detection |
-| **Max Detections** | `max_detections` | 50 | [1, 100], step 1 | Maximum number of detections processed by backend |
+| **Max Detections** | `max_detections` | 200 | [1, 1000], step 1 | Maximum number of detections processed by backend |
 | **Perf Logging** | `perf_logging` | true | bool | If enabled, periodically logs inference FPS, avg inference time, and search timings to `data/logs/` |
 | **Frame Skip** | `frame_skip` | 1 | [1, 10], step 1 | Process every Nth frame (1=no skip, 2=every other frame). Higher values reduce CPU/GPU load |
 | **Max Broadcast FPS** | `max_broadcast_fps` | 50 | [5, 200], step 5 | Process every Nth frame (1=no skip, 2=every other frame). Higher values reduce CPU/GPU load |
