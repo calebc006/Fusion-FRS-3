@@ -1,0 +1,15 @@
+# Environments
+.venv
+venv/
+
+# Data
+data/*
+
+# Embeddings cache and database
+Embeddings.db
+embeddings_cache.json
+
+__pycache__/
+
+settings.json
+output.json
