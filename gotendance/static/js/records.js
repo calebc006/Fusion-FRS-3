@@ -42,40 +42,74 @@ class Records {
         if (!tagButtonsContainer) return;
         
         tagButtonsContainer.innerHTML = ''; // Clear existing buttons
-        
-        // Add "Select All" button
-        const selectAllBtn = document.createElement('button');
-        selectAllBtn.textContent = 'Select All';
-        selectAllBtn.onclick = () => this.selectAllTags();
-        selectAllBtn.className = 'tag-filter-btn select-all-btn';
-        if (this.selectedTags.size === this.allTags.size && this.allTags.size > 0) {
-            selectAllBtn.classList.add('active');
-        }
-        tagButtonsContainer.appendChild(selectAllBtn);
-        
-        // Add buttons for each unique tag
-        Array.from(this.allTags).sort().forEach(tag => {
+
+        // 1. Convert the Set to an Array and sort it NUMERICALLY (Ascending: Team 1, Team 2... Team 11)
+        const sortedTags = Array.from(this.allTags).sort((a, b) => {
+            const aNum = parseInt(a.match(/\d+/)) || 0;
+            const bNum = parseInt(b.match(/\d+/)) || 0;
+            
+            return aNum - bNum; // Change to 'bNum - aNum' if you want Descending order instead
+        });
+
+        // 2. Loop through the correctly sorted tags array
+        sortedTags.forEach(tag => {
             const btn = document.createElement('button');
             btn.textContent = tag;
-            btn.onclick = () => this.filterByTag(tag);
             btn.className = 'tag-filter-btn';
             if (this.selectedTags.has(tag)) {
                 btn.classList.add('active');
             }
+            btn.onclick = () => {
+                this.filterByTag(tag);
+                btn.classList.toggle('active', this.selectedTags.has(tag));
+            };
             tagButtonsContainer.appendChild(btn);
         });
+
+        this.updateTagDropdownLabel();
+        this.updateTagDropdownLabel();
+this.createClearTagsButton(); // Triggers the placement outside the dropdown
     }
 
-    selectAllTags() {
-        if (this.selectedTags.size === this.allTags.size) {
-            // If all are selected, deselect all
-            this.selectedTags.clear();
+
+    updateTagDropdownLabel() {
+        const labelEl = document.getElementById('tag-dropdown-label');
+        if (!labelEl) return;
+
+        if (this.selectedTags.size === 0) {
+            labelEl.textContent = 'All';
+        } else if (this.selectedTags.size === this.allTags.size) {
+            labelEl.textContent = `All Tags (${this.allTags.size})`;
         } else {
-            // Select all tags
-            this.selectedTags = new Set(this.allTags);
+            labelEl.textContent = `${this.selectedTags.size} Tag${this.selectedTags.size > 1 ? 's' : ''} Selected`;
         }
-        this.generateTagButtons();
-        this.applyAllFilters();
+    }
+
+    createClearTagsButton() {
+    // Check if the button already exists so we don't keep duplicating it
+    if (document.getElementById('clear-all-tags-btn')) return;
+
+    // Target the entire dropdown details element
+    const dropdownElement = document.getElementById('tag-filter-dropdown');
+    if (!dropdownElement) return;
+
+    const clearBtn = document.createElement('button');
+    clearBtn.id = 'clear-all-tags-btn';
+    clearBtn.textContent = 'Clear Filters';
+    clearBtn.className = 'clear-tags-btn'; 
+
+    clearBtn.onclick = () => this.clearTags(); 
+
+    // '.after()' places the button outside and to the right of the dropdown
+    dropdownElement.after(clearBtn); 
+}
+
+clearTags() {
+        this.selectedTags.clear();
+        const activeButtons = document.querySelectorAll('.tag-filter-btn.active');
+        activeButtons.forEach(btn => btn.classList.remove('active'));
+        this.updateTagDropdownLabel();
+        this.applyAllFilters(); 
     }
 
     loadData(data) {
@@ -165,7 +199,7 @@ class Records {
             this.selectedTags.add(tag);
         }
         this.applyAllFilters();
-        this.generateTagButtons();
+        this.updateTagDropdownLabel();
     }
 
     applyAllFilters() {
@@ -268,6 +302,18 @@ searchBarEl.addEventListener('focus', () => {
 searchBarEl.addEventListener('blur', () => {
     searchContainer.classList.remove('focused')
 })
+
+// Tag filter dropdown (native <details>/<summary> handles open/close)
+const tagFilterDropdown = document.getElementById('tag-filter-dropdown')
+
+if (tagFilterDropdown) {
+    // Close the dropdown when clicking outside of it
+    document.addEventListener('click', (e) => {
+        if (tagFilterDropdown.open && !tagFilterDropdown.contains(e.target)) {
+            tagFilterDropdown.open = false
+        }
+    })
+}
 
 // Attendance script for total amount of people
 function updateAttendance(attended, total) {
