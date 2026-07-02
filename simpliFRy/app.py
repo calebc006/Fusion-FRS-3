@@ -116,7 +116,7 @@ def status():
 
 @app.route("/api/vidFeed", methods=["GET"])
 def video_feed():
-    return Response(videoplayer.start_broadcast(), mimetype="multipart/x-mixed-replace; boundary=frame")
+    return Response(fr_instance.start_video_broadcast(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 @app.route("/api/frResults", methods=["GET"])
@@ -145,6 +145,9 @@ def submit_settings():
             "threshold_iou": float(request.form.get("threshold_iou", s["threshold_iou"])),
             "threshold_sim": float(request.form.get("threshold_sim", s["threshold_sim"])),
             "threshold_lenient_pers": float(request.form.get("threshold_lenient_pers", s["threshold_lenient_pers"])),
+
+            "use_low_light_enhancement": bool(request.form.get("use_low_light_enhancement", None) == "on"),
+            "use_dehaze": bool(request.form.get("use_dehaze", None) == "on"),
         }
 
         fr_instance.adjust_values(new)

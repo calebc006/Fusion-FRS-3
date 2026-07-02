@@ -17,6 +17,8 @@ from insightface.app import FaceAnalysis
 import voyager
 
 from lib.VideoPlayer import VideoPlayer, StreamState
+from lib.ZeroDCE import ZeroDCEEnhancer
+from lib.Dehaze import DehazeEnhancer
 from lib.utils import calc_iou, log_info
 from sql_db import get_db, recreate_table, fetch_records, save_record
 
@@ -34,11 +36,18 @@ FR_DEFAULT_SETTINGS = {
     "threshold_lenient_diff": 0.55,
     "similarity_gap": 0.10, 
 
-    "use_persistor": True, 
+    "use_persistor": True,
     "q_max_size": 100,
-    "threshold_iou": 0.7, 
+    "threshold_iou": 0.7,
     "threshold_sim": 0.6,
-    "threshold_lenient_pers": 0.60, 
+    "threshold_lenient_pers": 0.60,
+
+    "use_low_light_enhancement": False,
+
+    # Experimental: classical Dark Channel Prior haze removal. Built for outdoor haze/fog with a
+    # sky/far-distance reference; on indoor/close-range webcam footage it can introduce a color
+    # cast (e.g. reddish skin tones) and is significantly slower per-frame than the other options.
+    "use_dehaze": False,
 }
 
 def is_cuda_available() -> bool:
@@ -74,6 +83,8 @@ class FRSettings(TypedDict):
     max_broadcast_fps: int
     video_width: int
     video_height: int
+    use_low_light_enhancement: bool
+    use_dehaze: bool
 
 class PerfLog(TypedDict):
     fps: float
@@ -173,10 +184,16 @@ class FREngine:
             allowed_modules=["detection", "recognition"],
         )
         self.model.prepare(
-            ctx_id=0, 
-            det_size=(self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT), 
+            ctx_id=0,
+            det_size=(self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT),
             det_thresh=0.5,
         )
+
+        # Zero-DCE low-light enhancement (runs on frames right before face detection)
+        self.low_light_enhancer = ZeroDCEEnhancer(device="cuda" if provider == "CUDAExecutionProvider" else "cpu")
+
+        # Dark Channel Prior haze removal (experimental, runs before low-light enhancement)
+        self.dehaze_enhancer = DehazeEnhancer()
 
         # Index state
         self.embedding_index = VoyagerEmbeddingIndex(n_dimensions=512)
@@ -275,6 +292,10 @@ class FREngine:
                 img_path = os.path.join(folder_path, img_name)
                 img = cv2.imread(img_path)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB after using cv2.imread
+                if self.fr_settings["use_dehaze"]:
+                    img = self.dehaze_enhancer.dehaze(img)
+                if self.fr_settings["use_low_light_enhancement"]:
+                    img = self.low_light_enhancer.enhance(img)
                 faces = self.model.get(img)
                 if faces:
                     embeddings.append(faces[0].normed_embedding)
@@ -368,6 +389,38 @@ class FREngine:
 
         self.inferenceThread = threading.Thread(target=self._loop_inference, daemon=True)
         self.inferenceThread.start()
+
+    def start_video_broadcast(self) -> Generator[bytes, None, None]:
+        '''Generator yielding video frames for broadcast, enhanced via Zero-DCE when use_low_light_enhancement is on'''
+        vp = self.videoplayer
+        last_frame_id = 0
+
+        while vp.streamThread is not None and vp.streamThread.is_alive():
+            with vp.vid_lock.read_lock():
+                current_frame_id = vp.frame_id
+                frame = vp.current_frame
+
+            if current_frame_id <= last_frame_id:
+                time.sleep(0.005)
+                continue
+            last_frame_id = current_frame_id
+
+            if frame is None or frame.shape != (vp.height, vp.width, 3):
+                time.sleep(0.005)
+                continue
+
+            if self.fr_settings["use_dehaze"]:
+                frame = self.dehaze_enhancer.dehaze(frame)
+            if self.fr_settings["use_low_light_enhancement"]:
+                frame = self.low_light_enhancer.enhance_fast(frame)
+
+            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            _, buffer = cv2.imencode(".jpg", frame_bgr, [cv2.IMWRITE_JPEG_QUALITY, vp.jpg_quality])
+
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+            )
 
     def start_detection_broadcast(self) -> Generator[str, None, None]:
         '''Generator for detection broadcast (for /frResults)'''
@@ -523,6 +576,10 @@ class FREngine:
         try:
             # Read frame, pass through model
             resized_frame = cv2.resize(frame, (self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT))
+            if self.fr_settings["use_dehaze"]:
+                resized_frame = self.dehaze_enhancer.dehaze(resized_frame)
+            if self.fr_settings["use_low_light_enhancement"]:
+                resized_frame = self.low_light_enhancer.enhance(resized_frame)
             preds = self.model.get(resized_frame)
             preds.sort(key=lambda x: x.det_score)
             max_detections = min(len(preds), self.fr_settings["max_detections"])

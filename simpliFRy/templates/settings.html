@@ -105,6 +105,36 @@
           step="5"
           required
         />
+
+        <div class="break"></div>
+
+        <label for="use_low_light_enhancement">Low Light Enhancement</label>
+        <input
+          type="checkbox"
+          id="use_low_light_enhancement"
+          name="use_low_light_enhancement"
+          {%
+          if
+          use_low_light_enhancement
+          %}checked{%
+          endif
+          %}
+        />
+
+        <div class="break"></div>
+
+        <label for="use_dehaze">Exposure Reduction</label>
+        <input
+          type="checkbox"
+          id="use_dehaze"
+          name="use_dehaze"
+          {%
+          if
+          use_dehaze
+          %}checked{%
+          endif
+          %}
+        />
       </fieldset>
 
       <fieldset class="form-section">

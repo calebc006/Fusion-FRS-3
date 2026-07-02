@@ -68,7 +68,7 @@ const fetchDetections = () => {
                     buffer = parts[parts.length - 1] || "";
 
                     const videoContainer = document.getElementById("video-container");
-                    updateBBoxes(videoContainer, data, { showLabels: false, showUnknown: true });
+                    updateBBoxes(videoContainer, data, { showLabels: true, showUnknown: true });
                     updateDetectionList(data);
 
                     // Recursive call
