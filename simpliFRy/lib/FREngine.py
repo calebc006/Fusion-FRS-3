@@ -19,6 +19,7 @@ import voyager
 from lib.VideoPlayer import VideoPlayer, StreamState
 from lib.ZeroDCE import ZeroDCEEnhancer
 from lib.Dehaze import DehazeEnhancer
+from lib.NAFNet import NAFNetDenoiser
 from lib.utils import calc_iou, log_info
 from sql_db import get_db, recreate_table, fetch_records, save_record
 
@@ -48,6 +49,11 @@ FR_DEFAULT_SETTINGS = {
     # sky/far-distance reference; on indoor/close-range webcam footage it can introduce a color
     # cast (e.g. reddish skin tones) and is significantly slower per-frame than the other options.
     "use_dehaze": False,
+
+    # Experimental: NAFNet (SIDD-trained) denoising. ~31ms/frame at detection resolution and
+    # ~183ms/frame at full stream resolution on GPU - noticeably slower than the other options,
+    # with no lossless speedup trick available since output depends on local pixel detail.
+    "use_denoise": False,
 }
 
 def is_cuda_available() -> bool:
@@ -85,6 +91,7 @@ class FRSettings(TypedDict):
     video_height: int
     use_low_light_enhancement: bool
     use_dehaze: bool
+    use_denoise: bool
 
 class PerfLog(TypedDict):
     fps: float
@@ -195,6 +202,9 @@ class FREngine:
         # Dark Channel Prior haze removal (experimental, runs before low-light enhancement)
         self.dehaze_enhancer = DehazeEnhancer()
 
+        # NAFNet denoising (experimental, runs after dehaze, before low-light enhancement)
+        self.denoiser = NAFNetDenoiser(device="cuda" if provider == "CUDAExecutionProvider" else "cpu")
+
         # Index state
         self.embedding_index = VoyagerEmbeddingIndex(n_dimensions=512)
 
@@ -294,6 +304,8 @@ class FREngine:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB after using cv2.imread
                 if self.fr_settings["use_dehaze"]:
                     img = self.dehaze_enhancer.dehaze(img)
+                if self.fr_settings["use_denoise"]:
+                    img = self.denoiser.denoise(img)
                 if self.fr_settings["use_low_light_enhancement"]:
                     img = self.low_light_enhancer.enhance(img)
                 faces = self.model.get(img)
@@ -411,6 +423,8 @@ class FREngine:
 
             if self.fr_settings["use_dehaze"]:
                 frame = self.dehaze_enhancer.dehaze(frame)
+            if self.fr_settings["use_denoise"]:
+                frame = self.denoiser.denoise(frame)
             if self.fr_settings["use_low_light_enhancement"]:
                 frame = self.low_light_enhancer.enhance_fast(frame)
 
@@ -578,6 +592,8 @@ class FREngine:
             resized_frame = cv2.resize(frame, (self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT))
             if self.fr_settings["use_dehaze"]:
                 resized_frame = self.dehaze_enhancer.dehaze(resized_frame)
+            if self.fr_settings["use_denoise"]:
+                resized_frame = self.denoiser.denoise(resized_frame)
             if self.fr_settings["use_low_light_enhancement"]:
                 resized_frame = self.low_light_enhancer.enhance(resized_frame)
             preds = self.model.get(resized_frame)
