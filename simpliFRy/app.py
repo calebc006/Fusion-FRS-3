@@ -149,6 +149,7 @@ def submit_settings():
             "use_low_light_enhancement": bool(request.form.get("use_low_light_enhancement", None) == "on"),
             "use_dehaze": bool(request.form.get("use_dehaze", None) == "on"),
             "use_denoise": bool(request.form.get("use_denoise", None) == "on"),
+            "use_lafs": bool(request.form.get("use_lafs", None) == "on"),
         }
 
         fr_instance.adjust_values(new)

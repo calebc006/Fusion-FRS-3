@@ -14,12 +14,14 @@ from tqdm import tqdm
 import numpy as np
 import cv2
 from insightface.app import FaceAnalysis
+from insightface.utils import face_align
 import voyager
 
 from lib.VideoPlayer import VideoPlayer, StreamState
 from lib.ZeroDCE import ZeroDCEEnhancer
 from lib.Dehaze import DehazeEnhancer
 from lib.NAFNet import NAFNetDenoiser
+from lib.LAFS import LAFSEmbedder
 from lib.utils import calc_iou, log_info
 from sql_db import get_db, recreate_table, fetch_records, save_record
 
@@ -54,7 +56,16 @@ FR_DEFAULT_SETTINGS = {
     # ~183ms/frame at full stream resolution on GPU - noticeably slower than the other options,
     # with no lossless speedup trick available since output depends on local pixel detail.
     "use_denoise": False,
+
+    # Experimental: replaces insightface's arcface recognition embedding (512-dim) with LAFS's
+    # Part-fViT embedding (768-dim). Runs in addition to (not instead of) insightface's own
+    # recognition pass, and forces embeddings to be regenerated when toggled since the two
+    # methods produce incompatible embedding spaces.
+    "use_lafs": False,
 }
+
+INSIGHTFACE_EMBEDDING_DIM = 512
+LAFS_EMBEDDING_DIM = 768
 
 def is_cuda_available() -> bool:
     try:
@@ -92,6 +103,7 @@ class FRSettings(TypedDict):
     use_low_light_enhancement: bool
     use_dehaze: bool
     use_denoise: bool
+    use_lafs: bool
 
 class PerfLog(TypedDict):
     fps: float
@@ -205,8 +217,13 @@ class FREngine:
         # NAFNet denoising (experimental, runs after dehaze, before low-light enhancement)
         self.denoiser = NAFNetDenoiser(device="cuda" if provider == "CUDAExecutionProvider" else "cpu")
 
+        # LAFS embedding (experimental, alternative to insightface's arcface recognition embedding)
+        # use_fp16=False: LAFS's internal grid_sample-based patch extraction doesn't support fp16 on this setup
+        self.lafs_embedder = LAFSEmbedder(device="cuda" if provider == "CUDAExecutionProvider" else "cpu", use_fp16=False)
+
         # Index state
-        self.embedding_index = VoyagerEmbeddingIndex(n_dimensions=512)
+        embedding_dim = LAFS_EMBEDDING_DIM if self.fr_settings["use_lafs"] else INSIGHTFACE_EMBEDDING_DIM
+        self.embedding_index = VoyagerEmbeddingIndex(n_dimensions=embedding_dim)
 
         # Inference
         self.inference_lock = threading.Lock()
@@ -217,6 +234,7 @@ class FREngine:
         self.persisted_detections: deque[FRResult] = deque(maxlen=self.fr_settings["q_max_size"])
         self.embeddings_loaded = False
         self.embeddings_loading = False
+        self.last_data_file: str | None = None
 
         log_info(f"FR Model initialised! Input: {self.width}x{self.height}, {self.fps}fps; Inference: {inference_width}x{inference_height}")
 
@@ -233,6 +251,7 @@ class FREngine:
         self.embeddings_loading = True
         self.embeddings_loaded = False
         data_file = data_file.strip()
+        self.last_data_file = data_file or self.last_data_file
 
         try:
             self.embedding_index.reset_index()
@@ -291,7 +310,29 @@ class FREngine:
 
         # Save cache info after successful generation
         file_hash = self._compute_file_hash(data_file)
-        self._save_cache_info(data_file, file_hash)
+        self._save_cache_info(data_file, file_hash, self.fr_settings["use_lafs"])
+
+    def _get_embedding(self, img: np.ndarray, face) -> np.ndarray:
+        '''
+        Returns the embedding to use for matching: insightface's arcface embedding, or LAFS's if
+        enabled, optionally denoised first. Denoising runs on just the small aligned 112x112 face
+        crop (not the whole frame) since it only needs to feed the embedding step, not detection -
+        this keeps NAFNet's cost proportional to a tiny crop instead of the full frame.
+        '''
+        if not self.fr_settings["use_denoise"] and not self.fr_settings["use_lafs"]:
+            return face.normed_embedding
+
+        aligned = face_align.norm_crop(img, face.kps, image_size=112)
+        if self.fr_settings["use_denoise"]:
+            aligned = self.denoiser.denoise(aligned)
+
+        if self.fr_settings["use_lafs"]:
+            return self.lafs_embedder.embed(aligned)
+
+        # Recompute insightface's own embedding on the (denoised) aligned crop directly,
+        # bypassing its internal detect+recognize pass which used the original (un-denoised) crop
+        feat = self.model.models["recognition"].get_feat(aligned).flatten()
+        return feat / np.linalg.norm(feat)
 
     def _avg_embedding(self, folder_path: str, image_list: list[str]) -> np.ndarray:
         """Extract the average embedding from images in image_list"""
@@ -304,13 +345,11 @@ class FREngine:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB after using cv2.imread
                 if self.fr_settings["use_dehaze"]:
                     img = self.dehaze_enhancer.dehaze(img)
-                if self.fr_settings["use_denoise"]:
-                    img = self.denoiser.denoise(img)
                 if self.fr_settings["use_low_light_enhancement"]:
                     img = self.low_light_enhancer.enhance(img)
                 faces = self.model.get(img)
                 if faces:
-                    embeddings.append(faces[0].normed_embedding)
+                    embeddings.append(self._get_embedding(img, faces[0]))
                 else:
                     no_face += 1
             except Exception as e:
@@ -337,29 +376,35 @@ class FREngine:
         return {}
 
     @staticmethod
-    def _save_cache_info(data_file: str, file_hash: str) -> None:
+    def _save_cache_info(data_file: str, file_hash: str, use_lafs: bool) -> None:
         """Save embedding cache information"""
         cache_info = {
             "data_file": data_file,
             "file_hash": file_hash,
+            "use_lafs": use_lafs,
             "timestamp": datetime.now().isoformat()
         }
         with open(EMBEDDINGS_CACHE_FP, 'w') as f:
             json.dump(cache_info, f, indent=2)
 
     def _should_regenerate_embeddings(self, data_file: str) -> bool:
-        """Check if embeddings need to be regenerated based on file hash"""
+        """Check if embeddings need to be regenerated based on file hash or embedding method change"""
         current_hash = self._compute_file_hash(data_file)
         cache_info = self._load_cache_info()
 
-        if cache_info.get("data_file") == data_file and cache_info.get("file_hash") == current_hash:
+        # use_lafs defaults to False for caches saved before this setting existed
+        if (
+            cache_info.get("data_file") == data_file
+            and cache_info.get("file_hash") == current_hash
+            and cache_info.get("use_lafs", False) == self.fr_settings["use_lafs"]
+        ):
             with get_db() as conn:
                 records = fetch_records(conn)
                 if len(records) > 0:
                     log_info(f"Using cached embeddings (file hash matches: {current_hash[:8]}...)")
                     return False
-        
-        log_info("Regenerating embeddings (file changed or no cache)")
+
+        log_info("Regenerating embeddings (file changed, embedding method changed, or no cache)")
         return True
 
     # ───────────────────────────── Settings ─────────────────────────────────
@@ -371,6 +416,21 @@ class FREngine:
         self.fr_settings = {**previous_settings, **new_settings} # Merge new_settings with previous
         with open(FR_SETTINGS_PATH, 'w') as f:
             json.dump(self.fr_settings, f)
+
+        # Switching embedding methods changes the embedding dimension (insightface: 512, LAFS: 768),
+        # so the existing index can no longer be used - reset it and regenerate automatically using
+        # the same namelist JSON that was last loaded. The video stream itself is untouched here,
+        # since it's independent of the embedding index (no need to restart the camera).
+        if previous_settings.get("use_lafs") != self.fr_settings["use_lafs"]:
+            embedding_dim = LAFS_EMBEDDING_DIM if self.fr_settings["use_lafs"] else INSIGHTFACE_EMBEDDING_DIM
+            self.embedding_index = VoyagerEmbeddingIndex(n_dimensions=embedding_dim)
+            self.persisted_detections.clear()
+            self.embeddings_loaded = False
+            log_info(f"Embedding method changed (use_lafs={self.fr_settings['use_lafs']}); regenerating embeddings")
+
+            if self.last_data_file:
+                self.load_embeddings(self.last_data_file)
+
         return self.fr_settings
 
     def _load_settings(self) -> FRSettings:
@@ -423,8 +483,6 @@ class FREngine:
 
             if self.fr_settings["use_dehaze"]:
                 frame = self.dehaze_enhancer.dehaze(frame)
-            if self.fr_settings["use_denoise"]:
-                frame = self.denoiser.denoise(frame)
             if self.fr_settings["use_low_light_enhancement"]:
                 frame = self.low_light_enhancer.enhance_fast(frame)
 
@@ -592,8 +650,6 @@ class FREngine:
             resized_frame = cv2.resize(frame, (self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT))
             if self.fr_settings["use_dehaze"]:
                 resized_frame = self.dehaze_enhancer.dehaze(resized_frame)
-            if self.fr_settings["use_denoise"]:
-                resized_frame = self.denoiser.denoise(resized_frame)
             if self.fr_settings["use_low_light_enhancement"]:
                 resized_frame = self.low_light_enhancer.enhance(resized_frame)
             preds = self.model.get(resized_frame)
@@ -607,7 +663,7 @@ class FREngine:
             if not preds or len(preds) == 0:
                 return [], 0.0, 0.0, 0.0
             
-            embeddings = [y.normed_embedding for y in preds]
+            embeddings = [self._get_embedding(resized_frame, y) for y in preds]
             bboxes = [self._frac_bbox(self.INFERENCE_WIDTH, self.INFERENCE_HEIGHT, y.bbox.tolist()) for y in preds]
 
             if self.embedding_index.size() == 0:

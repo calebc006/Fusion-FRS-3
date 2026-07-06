@@ -138,7 +138,7 @@
 
         <div class="break"></div>
 
-        <label for="use_denoise">Denoise (NAFNet) - Experimental</label>
+        <label for="use_denoise">Denoise (NAFNet)</label>
         <input
           type="checkbox"
           id="use_denoise"
@@ -150,10 +150,21 @@
           endif
           %}
         />
-        <p style="font-size: 0.8em; opacity: 0.7; margin-top: 0.25em;">
-          Noticeably slower per-frame than the other options (~30ms at detection resolution,
-          ~180ms at full stream resolution).
-        </p>
+
+        <div class="break"></div>
+
+        <label for="use_lafs">Use LAFS Embedding (instead of insightface)</label>
+        <input
+          type="checkbox"
+          id="use_lafs"
+          name="use_lafs"
+          {%
+          if
+          use_lafs
+          %}checked{%
+          endif
+          %}
+        />
       </fieldset>
 
       <fieldset class="form-section">
