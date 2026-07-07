@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FR Live - Confidence Benchmark</title>
+    <link rel="icon" href="../static/images/fusionlogo.png" />
+    <link rel="stylesheet" href="../static/css/main.css" />
+    <link rel="stylesheet" href="../static/css/taskbar.css" />
+    <link rel="stylesheet" href="../static/css/benchmark.css" />
+  </head>
+  <body>
+    <div class="title">
+      <div class="top">Fusion</div>
+      <div class="bottom">Confidence Benchmark</div>
+    </div>
+
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+    <div class="benchmark-container">
+      <div class="benchmark-panel">
+        <div class="benchmark-controls-col">
+          <form id="model-settings-form">
+            <fieldset class="benchmark-mode">
+              <legend>Models</legend>
+
+              <label for="use_low_light_enhancement">Low Light Enhancement</label>
+              <input type="checkbox" id="use_low_light_enhancement" name="use_low_light_enhancement" />
+              <div class="break"></div>
+
+              <label for="use_dehaze">Exposure Reduction (Dehaze)</label>
+              <input type="checkbox" id="use_dehaze" name="use_dehaze" />
+              <div class="break"></div>
+
+              <label for="use_denoise">Denoise (NAFNet)</label>
+              <input type="checkbox" id="use_denoise" name="use_denoise" />
+              <div class="break"></div>
+
+              <label for="use_lafs">LAFS Embedding</label>
+              <input type="checkbox" id="use_lafs" name="use_lafs" />
+
+              <div class="benchmark-mode-buttons">
+                <button type="submit" id="apply-models-button" class="nav-button">Apply Models</button>
+              </div>
+            </fieldset>
+          </form>
+
+          <fieldset class="benchmark-mode">
+            <legend>Video Benchmark</legend>
+            <p class="benchmark-hint">
+              Upload a video and it will be run through the current detection/embedding pipeline -
+              whoever is recognized is automatically picked as the target, no manual enrollment
+              needed.
+            </p>
+
+            <label for="video-input">Video File</label>
+            <input type="file" id="video-input" accept="video/*" />
+
+            <div class="benchmark-mode-buttons">
+              <button id="run-video-button" class="nav-button">Upload &amp; Run</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="benchmark-results-col">
+          <div id="settings-summary" class="benchmark-summary"></div>
+
+          <div id="live-status" class="benchmark-status"></div>
+
+          <div id="results" class="benchmark-results"></div>
+
+          <button id="export-button" class="nav-button" disabled>Export to Excel</button>
+        </div>
+      </div>
+
+      <div class="feed-panel">
+        <div id="video-container">
+          <img id="video-playback" alt="video benchmark preview" src="../static/images/default.jpg" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Taskbar -->
+    <div class="taskbar-placeholder">
+      <div class="taskbar">
+        <button id="home-button">Home</button>
+        <button id="history-button">View History</button>
+      </div>
+    </div>
+
+    <script type="module" src="../static/js/benchmark.js"></script>
+    <script type="module" src="../static/js/taskbar.js"></script>
+  </body>
+</html>

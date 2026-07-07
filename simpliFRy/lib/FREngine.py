@@ -10,6 +10,7 @@ import subprocess
 from collections import deque
 import json
 import hashlib
+import base64
 from tqdm import tqdm
 import numpy as np
 import cv2
@@ -461,6 +462,74 @@ class FREngine:
 
         self.inferenceThread = threading.Thread(target=self._loop_inference, daemon=True)
         self.inferenceThread.start()
+
+    def run_video_benchmark(self, video_path: str) -> Generator[str, None, None]:
+        '''
+        Processes a video file frame-by-frame through the current detection/embedding pipeline
+        (respecting whichever preprocessing/embedding settings are currently active - dehaze,
+        low-light enhancement, denoise, LAFS vs insightface), independent of the live camera
+        stream. No target name needs to be supplied - every enrolled face recognized in a frame
+        is reported automatically (supports multiple simultaneous faces). Yields one JSON line
+        per processed frame with progress, the list of recognized label/score/bbox detections
+        for that frame, and a JPEG preview of the frame just processed - so a benchmark UI can
+        show the video, detection boxes, and identified names updating live as it happens.
+
+        Arguments
+        - video_path: path to the uploaded video file
+        '''
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            yield json.dumps({"error": f"Could not open video: {video_path}"}) + "\n"
+            return
+
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        skip = max(self.fr_settings["frame_skip"], 1)
+        frame_idx = 0
+        PREVIEW_MAX_DIM = 640
+        PREVIEW_FPS = 15  # throttle the (expensive) image preview independently of processing rate
+        last_preview_time = 0.0
+
+        try:
+            while True:
+                ret, frame_bgr = cap.read()
+                if not ret:
+                    break
+                frame_idx += 1
+
+                if skip > 1 and frame_idx % skip != 0:
+                    continue
+
+                frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+
+                # Guard against overlapping with a concurrently-running live inference thread
+                with self.inference_lock:
+                    results, _, _, _ = self._infer(frame_rgb)
+
+                # Report every known (non-Unknown) face detected this frame, not just one -
+                # supports testing multiple simultaneous faces in the same video
+                known = [r for r in results if r["label"] != "Unknown"]
+
+                frame_jpeg = None
+                now = time.monotonic()
+                if now - last_preview_time >= 1 / PREVIEW_FPS:
+                    last_preview_time = now
+                    h, w = frame_bgr.shape[:2]
+                    scale = min(1.0, PREVIEW_MAX_DIM / max(h, w))
+                    preview = cv2.resize(frame_bgr, (int(w * scale), int(h * scale))) if scale < 1.0 else frame_bgr
+                    _, buffer = cv2.imencode(".jpg", preview, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                    frame_jpeg = base64.b64encode(buffer).decode("ascii")
+
+                yield json.dumps({
+                    "frame_idx": frame_idx,
+                    "total_frames": total_frames,
+                    "detections": [
+                        {"label": r["label"], "score": r["score"], "bbox": r["bbox"]}
+                        for r in known
+                    ],
+                    "frame_jpeg": frame_jpeg,
+                }) + "\n"
+        finally:
+            cap.release()
 
     def start_video_broadcast(self) -> Generator[bytes, None, None]:
         '''Generator yielding video frames for broadcast, enhanced via Zero-DCE when use_low_light_enhancement is on'''

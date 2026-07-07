@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FR Live - Benchmark History</title>
+    <link rel="icon" href="../static/images/fusionlogo.png" />
+    <link rel="stylesheet" href="../static/css/main.css" />
+    <link rel="stylesheet" href="../static/css/taskbar.css" />
+    <link rel="stylesheet" href="../static/css/benchmark_history.css" />
+  </head>
+  <body>
+    <div class="title">
+      <div class="top">Fusion</div>
+      <div class="bottom">Benchmark History</div>
+    </div>
+
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+    <div class="history-container">
+      <div class="history-video-panel">
+        <h2>Video Used</h2>
+        <img id="thumbnail" alt="benchmarked video thumbnail" />
+        <p id="no-data-hint" class="no-results hidden">
+          No benchmark runs recorded yet - go to /benchmark, run a video, then come back here.
+        </p>
+      </div>
+
+      <div class="history-sheet-panel">
+        <h2>Runs</h2>
+        <div class="sheet-scroll">
+          <table id="history-table" class="sheet-table">
+            <thead>
+              <tr>
+                <th>Run Time</th>
+                <th>Models Used</th>
+                <th>People Seen</th>
+                <th>Detections Captured</th>
+                <th>Mean Distance</th>
+                <th>Min Distance</th>
+                <th>Max Distance</th>
+                <th>% Identified</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+
+        <div class="history-buttons">
+          <button id="export-button" class="nav-button" disabled>Export to Excel</button>
+          <button id="clear-button" class="nav-button" disabled>Clear History</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Taskbar -->
+    <div class="taskbar-placeholder">
+      <div class="taskbar">
+        <button id="home-button">Home</button>
+        <button id="benchmark-button">Benchmark</button>
+      </div>
+    </div>
+
+    <script type="module" src="../static/js/benchmark_history.js"></script>
+    <script type="module" src="../static/js/taskbar.js"></script>
+  </body>
+</html>

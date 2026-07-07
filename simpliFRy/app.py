@@ -4,12 +4,20 @@ import os
 import signal
 import time
 import atexit
+import uuid
+import base64
+from io import BytesIO
+from datetime import datetime
 from types import SimpleNamespace
 
 from dotenv import load_dotenv
-from flask import Flask, Response, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, Response, render_template, request, redirect, url_for, send_from_directory, send_file
 from flask_cors import CORS
 from waitress import serve
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
 
 from lib import FREngine, VideoPlayer, StreamState
 from lib.utils import list_camera_devices, log_info, init_logger
@@ -177,6 +185,128 @@ def get_performance():
     if fr_instance.last_perf is not None:
         return _json(fr_instance.last_perf)
     return _json({})
+
+
+BENCHMARK_UPLOAD_DIR = os.path.join("data", "benchmark_uploads")
+os.makedirs(BENCHMARK_UPLOAD_DIR, exist_ok=True)
+
+
+@app.route("/api/benchmark/upload", methods=["POST"])
+def benchmark_upload():
+    """API to upload a video file for offline benchmark analysis"""
+    file = request.files.get("video")
+    if not file or not file.filename:
+        return _json({"message": "No video file provided"}, 400)
+
+    # Clean up any previous upload(s) before saving the new one, so the folder never accumulates
+    # files beyond the one currently needed for this session's processing + replay
+    for old_file in os.listdir(BENCHMARK_UPLOAD_DIR):
+        try:
+            os.remove(os.path.join(BENCHMARK_UPLOAD_DIR, old_file))
+        except OSError:
+            pass
+
+    filename = f"{uuid.uuid4().hex}_{file.filename}"
+    path = os.path.join(BENCHMARK_UPLOAD_DIR, filename)
+    file.save(path)
+    return _json({"video_path": path, "video_url": f"/data/benchmark_uploads/{filename}"})
+
+
+@app.route("/api/benchmark/run", methods=["GET"])
+def benchmark_run():
+    """API to run the offline video benchmark, streaming per-frame progress"""
+    video_path = request.args.get("video_path")
+    if not video_path:
+        return _json({"message": "video_path is required"}, 400)
+
+    # Restrict to the upload directory - video_path is client-supplied, so this prevents
+    # it from being used to open arbitrary files elsewhere on disk
+    resolved = os.path.realpath(video_path)
+    upload_dir = os.path.realpath(BENCHMARK_UPLOAD_DIR)
+    if not resolved.startswith(upload_dir + os.sep) or not os.path.exists(resolved):
+        return _json({"message": "Invalid video_path"}, 404)
+
+    return Response(fr_instance.run_video_benchmark(resolved), mimetype="application/json")
+
+
+@app.route("/api/benchmark/export", methods=["POST"])
+def benchmark_export():
+    """
+    API to export a video benchmark's run history as an Excel report - one row per run,
+    so the same video benchmarked repeatedly under different model settings can be compared
+    side-by-side (models used vs. resulting confidence scores).
+    """
+    data = request.get_json(silent=True) or {}
+    runs = data.get("runs") or []
+    thumbnail_b64 = data.get("thumbnail")
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Benchmark Report"
+
+    for col, width in {1: 22, 2: 28, 3: 30, 4: 16, 5: 14, 6: 14, 7: 14, 8: 16}.items():
+        ws.column_dimensions[get_column_letter(col)].width = width
+
+    row = 1
+    if thumbnail_b64:
+        try:
+            image_bytes = base64.b64decode(thumbnail_b64.split(",")[-1])
+            img = XLImage(BytesIO(image_bytes))
+            if img.width > 480:
+                scale = 480 / img.width
+                img.width = 480
+                img.height = int(img.height * scale)
+            ws.add_image(img, "A1")
+            row = int(img.height / 15) + 2  # approximate rows spanned by the image, plus spacing
+        except Exception as e:
+            log_info(f"Failed to embed benchmark thumbnail: {e}")
+
+    bold = Font(bold=True)
+
+    ws.cell(row=row, column=1, value="Report generated").font = bold
+    ws.cell(row=row, column=2, value=datetime.now().isoformat(timespec="seconds"))
+    row += 1
+    ws.cell(row=row, column=1, value="Recognition threshold").font = bold
+    ws.cell(row=row, column=2, value=fr_instance.fr_settings.get("threshold"))
+    row += 2
+
+    headers = [
+        "Run time", "Models used", "People seen", "Detections captured",
+        "Mean distance", "Min distance (best)", "Max distance (worst)", "% identified",
+    ]
+    for col, header in enumerate(headers, start=1):
+        ws.cell(row=row, column=col, value=header).font = bold
+    row += 1
+
+    for run in runs:
+        stats = run.get("stats") or {}
+        toggles = run.get("toggles") or []
+        people_seen = run.get("people_seen") or []
+        values = [
+            run.get("timestamp", ""),
+            ", ".join(toggles) if toggles else "none",
+            ", ".join(people_seen) if people_seen else "none",
+            stats.get("detections_captured"),
+            stats.get("mean"),
+            stats.get("min"),
+            stats.get("max"),
+            stats.get("pct_identified"),
+        ]
+        for col, value in enumerate(values, start=1):
+            ws.cell(row=row, column=col, value=value)
+        row += 1
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    filename = f"benchmark_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return send_file(
+        buffer,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=filename,
+    )
 # ───────────────────────────── Pages ──────────────────────────────────────
 
 @app.route("/")
@@ -198,6 +328,14 @@ def seats():
 @app.route("/settings")
 def settings():
     return render_template("settings.html", **fr_instance.fr_settings) # Render with fr_settings as context
+
+@app.route("/benchmark")
+def benchmark():
+    return render_template("benchmark.html")
+
+@app.route("/benchmark-history")
+def benchmark_history_page():
+    return render_template("benchmark_history.html")
 
 @app.route('/data/<path:filename>')
 def serve_data(filename):

@@ -1,0 +1,104 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-foreground);
+}
+
+.title {
+    text-align: center;
+    margin-top: -10px;
+    color: black;
+    font-family: Arial, sans-serif;
+}
+
+.title .top {
+    font-size: 40px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 1;
+    margin-bottom: 8px;
+}
+
+.title .bottom {
+    font-size: 60px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.history-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5em;
+    position: absolute;
+    top: 20vh;
+    width: 92vw;
+    left: 4vw;
+    font-family: Arial, sans-serif;
+    color: black;
+}
+
+.history-video-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.history-video-panel h2,
+.history-sheet-panel h2 {
+    margin: 0 0 0.5em 0;
+}
+
+#thumbnail {
+    max-width: 480px;
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.history-sheet-panel {
+    width: 100%;
+}
+
+.sheet-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.sheet-table {
+    border-collapse: collapse;
+    width: 100%;
+    background: white;
+}
+
+.sheet-table th,
+.sheet-table td {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    padding: 0.5em 0.8em;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.sheet-table th {
+    background-color: #e0e0e0;
+    font-weight: bold;
+}
+
+.sheet-table tbody tr:nth-child(even) {
+    background-color: #f5f5f5;
+}
+
+.history-buttons {
+    margin-top: 1em;
+    display: flex;
+    gap: 1em;
+}
+
+.no-results {
+    color: #b00;
+}
+
+.hidden {
+    display: none;
+}

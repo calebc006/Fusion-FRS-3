@@ -1,0 +1,129 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-foreground);
+}
+
+.title {
+    text-align: center;
+    margin-top: -10px;
+    color: black;
+    font-family: Arial, sans-serif;
+}
+
+.title .top {
+    font-size: 40px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    opacity: 1;
+    margin-bottom: 8px;
+}
+
+.title .bottom {
+    font-size: 60px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.benchmark-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 3vw;
+    position: absolute;
+    top: 20vh;
+    width: 96vw;
+    left: 2vw;
+}
+
+.benchmark-panel {
+    width: 46vw;
+    font-family: Arial, sans-serif;
+    color: black;
+    display: flex;
+    flex-direction: row;
+    gap: 1.5em;
+    flex-wrap: wrap;
+}
+
+.benchmark-controls-col {
+    flex: 1 1 260px;
+    min-width: 260px;
+}
+
+.benchmark-results-col {
+    flex: 1 1 220px;
+    min-width: 220px;
+}
+
+.benchmark-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    max-width: 320px;
+    margin-top: 1em;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.benchmark-mode label {
+    font-weight: bold;
+    margin-top: 0.5em;
+}
+
+.benchmark-mode input {
+    padding: 0.4em;
+    font-size: 1em;
+}
+
+.benchmark-hint {
+    font-size: 0.8em;
+    opacity: 0.75;
+    margin: 0 0 0.5em 0;
+}
+
+.benchmark-mode-buttons {
+    margin-top: 0.5em;
+}
+
+.benchmark-summary {
+    margin-top: 1em;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.benchmark-status {
+    margin-top: 1em;
+    font-weight: bold;
+}
+
+.benchmark-results {
+    margin-top: 1em;
+}
+
+.results-table {
+    border-collapse: collapse;
+}
+
+.results-table td {
+    padding: 0.3em 0.8em;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.no-results {
+    color: #b00;
+}
+
+.feed-panel {
+    width: 40vw;
+}
+
+#video-container {
+    position: relative;
+}
+
+.feed-panel img {
+    width: 40vw;
+}
