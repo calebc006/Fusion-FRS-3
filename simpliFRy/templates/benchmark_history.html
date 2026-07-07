@@ -24,38 +24,15 @@
     ></div>
 
     <div class="history-container">
-      <div class="history-video-panel">
-        <h2>Video Used</h2>
-        <img id="thumbnail" alt="benchmarked video thumbnail" />
-        <p id="no-data-hint" class="no-results hidden">
-          No benchmark runs recorded yet - go to /benchmark, run a video, then come back here.
-        </p>
-      </div>
+      <p id="no-data-hint" class="no-results hidden">
+        No benchmark runs recorded yet - go to /benchmark, run a video, then come back here.
+      </p>
 
-      <div class="history-sheet-panel">
-        <h2>Runs</h2>
-        <div class="sheet-scroll">
-          <table id="history-table" class="sheet-table">
-            <thead>
-              <tr>
-                <th>Run Time</th>
-                <th>Models Used</th>
-                <th>People Seen</th>
-                <th>Detections Captured</th>
-                <th>Mean Distance</th>
-                <th>Min Distance</th>
-                <th>Max Distance</th>
-                <th>% Identified</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body"></tbody>
-          </table>
-        </div>
+      <div id="videos-container"></div>
 
-        <div class="history-buttons">
-          <button id="export-button" class="nav-button" disabled>Export to Excel</button>
-          <button id="clear-button" class="nav-button" disabled>Clear History</button>
-        </div>
+      <div class="history-buttons">
+        <button id="export-button" class="nav-button" disabled>Export All to Excel</button>
+        <button id="clear-button" class="nav-button" disabled>Clear History</button>
       </div>
     </div>
 

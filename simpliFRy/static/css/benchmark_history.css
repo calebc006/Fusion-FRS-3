@@ -8,7 +8,7 @@ body {
     text-align: center;
     margin-top: -10px;
     color: black;
-    font-family: Arial, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .title .top {
@@ -35,68 +35,145 @@ body {
     top: 20vh;
     width: 92vw;
     left: 4vw;
-    font-family: Arial, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: black;
+    padding-bottom: 3em;
 }
 
-.history-video-panel {
+#videos-container {
     display: flex;
     flex-direction: column;
+    gap: 1.5em;
+    width: 100%;
+}
+
+/* Each video's history gets its own card, matching gotendance's panel/dashboard style */
+.video-section {
+    width: 100%;
+    padding: 20px 24px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.035);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+    transition: box-shadow 0.25s ease;
+}
+
+.video-section:hover {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.video-section-header {
+    display: flex;
     align-items: center;
-    width: 100%;
+    gap: 1em;
+    margin-bottom: 1em;
 }
 
-.history-video-panel h2,
-.history-sheet-panel h2 {
-    margin: 0 0 0.5em 0;
+.video-section-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    letter-spacing: 0.3px;
 }
 
-#thumbnail {
-    max-width: 480px;
-    width: 100%;
-    border: 1px solid rgba(0, 0, 0, 0.3);
-}
-
-.history-sheet-panel {
-    width: 100%;
+.video-section-header .thumbnail {
+    max-width: 160px;
+    max-height: 100px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .sheet-scroll {
     width: 100%;
     overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .sheet-table {
     border-collapse: collapse;
     width: 100%;
-    background: white;
+    background-color: rgba(255, 255, 255, 0.75);
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 .sheet-table th,
 .sheet-table td {
-    border: 1px solid rgba(0, 0, 0, 0.3);
-    padding: 0.5em 0.8em;
+    padding: 10px 16px;
     text-align: left;
     white-space: nowrap;
+    font-size: 0.9em;
+}
+
+.sheet-table thead tr {
+    background-color: #2c3e50;
+    position: sticky;
+    top: 0;
 }
 
 .sheet-table th {
-    background-color: #e0e0e0;
-    font-weight: bold;
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.sheet-table tbody tr {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    transition: background-color 0.15s ease;
 }
 
 .sheet-table tbody tr:nth-child(even) {
-    background-color: #f5f5f5;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.sheet-table tbody tr:hover {
+    background-color: rgba(47, 79, 79, 0.12);
+}
+
+.sheet-table tbody tr:last-child {
+    border-bottom: none;
 }
 
 .history-buttons {
-    margin-top: 1em;
+    margin-top: 0.5em;
     display: flex;
     gap: 1em;
 }
 
+/* Color-coded to match gotendance: green = export, red = destructive/clear */
+#export-button {
+    background-color: #27ae60;
+    color: white;
+}
+
+#export-button:hover:not(:disabled) {
+    background-color: #219150;
+}
+
+#clear-button {
+    background-color: #e74c3c;
+    color: white;
+}
+
+#clear-button:hover:not(:disabled) {
+    background-color: #c0392b;
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 .no-results {
-    color: #b00;
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background-color: #e74c3c;
+    color: white;
+    font-weight: 500;
 }
 
 .hidden {

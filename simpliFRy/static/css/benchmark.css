@@ -8,7 +8,7 @@ body {
     text-align: center;
     margin-top: -10px;
     color: black;
-    font-family: Arial, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .title .top {
@@ -40,7 +40,7 @@ body {
 
 .benchmark-panel {
     width: 46vw;
-    font-family: Arial, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: black;
     display: flex;
     flex-direction: row;
@@ -51,6 +51,9 @@ body {
 .benchmark-controls-col {
     flex: 1 1 260px;
     min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5em;
 }
 
 .benchmark-results-col {
@@ -58,62 +61,130 @@ body {
     min-width: 220px;
 }
 
+/* Card treatment for each settings/upload section, matching gotendance's panel style */
 .benchmark-mode {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
     max-width: 320px;
-    margin-top: 1em;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
+    margin: 0;
+    padding: 16px 18px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.035);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.benchmark-mode:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.benchmark-mode legend {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    padding: 0 6px;
 }
 
 .benchmark-mode label {
-    font-weight: bold;
+    font-weight: 500;
     margin-top: 0.5em;
 }
 
-.benchmark-mode input {
-    padding: 0.4em;
-    font-size: 1em;
+.benchmark-mode input[type="number"],
+.benchmark-mode input[type="file"] {
+    padding: 8px 10px;
+    font-size: 0.95em;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: rgba(255, 255, 255, 0.6);
+    color: black;
+}
+
+.benchmark-mode input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: rgb(47, 79, 79);
+    vertical-align: middle;
 }
 
 .benchmark-hint {
     font-size: 0.8em;
     opacity: 0.75;
     margin: 0 0 0.5em 0;
+    line-height: 1.4;
 }
 
 .benchmark-mode-buttons {
-    margin-top: 0.5em;
+    margin-top: 0.75em;
 }
 
 .benchmark-summary {
-    margin-top: 1em;
+    display: inline-block;
+    margin-top: 0;
+    margin-bottom: 1em;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(47, 79, 79, 0.12);
+    font-size: 0.85em;
     font-style: italic;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .benchmark-status {
-    margin-top: 1em;
-    font-weight: bold;
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+    font-weight: 600;
 }
 
 .benchmark-results {
     margin-top: 1em;
 }
 
+.benchmark-results h3 {
+    margin-bottom: 0.5em;
+}
+
+/* Spreadsheet-style results table, matching gotendance's recordsTable */
 .results-table {
     border-collapse: collapse;
+    width: 100%;
+    max-width: 420px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .results-table td {
-    padding: 0.3em 0.8em;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 10px 16px;
+    font-size: 0.92em;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.results-table td:first-child {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.results-table tr:nth-child(even) td {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.results-table tr:last-child td {
+    border-bottom: none;
 }
 
 .no-results {
-    color: #b00;
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background-color: #e74c3c;
+    color: white;
+    font-weight: 500;
+    font-size: 0.9em;
 }
 
 .feed-panel {
@@ -122,8 +193,13 @@ body {
 
 #video-container {
     position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .feed-panel img {
     width: 40vw;
+    display: block;
 }

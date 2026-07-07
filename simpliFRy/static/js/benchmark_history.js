@@ -1,10 +1,9 @@
 import { showToast } from "./utils.js";
 
-const HISTORY_STORAGE_KEY = "benchmarkHistory";
+const HISTORY_STORAGE_KEY = "benchmarkHistoryByVideo";
 
-const thumbnailEl = document.getElementById("thumbnail");
 const noDataHintEl = document.getElementById("no-data-hint");
-const tableBodyEl = document.getElementById("history-table-body");
+const videosContainerEl = document.getElementById("videos-container");
 const exportButton = document.getElementById("export-button");
 const clearButton = document.getElementById("clear-button");
 const toast = document.getElementById("toast");
@@ -14,59 +13,88 @@ benchmarkButton.addEventListener("click", () => {
     window.location.href = "/benchmark";
 });
 
-const loadHistory = () => {
-    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
-    if (!raw) return { thumbnail: null, runs: [] };
+const loadHistoryStore = () => {
     try {
-        return JSON.parse(raw);
+        return JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || {};
     } catch {
-        return { thumbnail: null, runs: [] };
+        return {};
     }
+};
+
+const buildVideoSection = (hash, entry) => {
+    const section = document.createElement("div");
+    section.className = "video-section";
+
+    const rows = (entry.runs || [])
+        .map((run) => {
+            const stats = run.stats || {};
+            return `
+                <tr>
+                    <td>${new Date(run.timestamp).toLocaleString()}</td>
+                    <td>${run.toggles && run.toggles.length ? run.toggles.join(", ") : "none"}</td>
+                    <td>${run.people_seen && run.people_seen.length ? run.people_seen.join(", ") : "none"}</td>
+                    <td>${stats.detections_captured ?? ""}</td>
+                    <td>${stats.mean?.toFixed(4) ?? ""}</td>
+                    <td>${stats.min?.toFixed(4) ?? ""}</td>
+                    <td>${stats.max?.toFixed(4) ?? ""}</td>
+                    <td>${stats.pct_identified?.toFixed(1) ?? ""}%</td>
+                </tr>
+            `;
+        })
+        .join("");
+
+    section.innerHTML = `
+        <div class="video-section-header">
+            ${entry.thumbnail ? `<img class="thumbnail" src="data:image/jpeg;base64,${entry.thumbnail}" alt="${entry.video_name || "video"}" />` : ""}
+            <h2>${entry.video_name || "Untitled video"}</h2>
+        </div>
+        <div class="sheet-scroll">
+            <table class="sheet-table">
+                <thead>
+                    <tr>
+                        <th>Run Time</th>
+                        <th>Models Used</th>
+                        <th>People Seen</th>
+                        <th>Detections Captured</th>
+                        <th>Mean Distance</th>
+                        <th>Min Distance</th>
+                        <th>Max Distance</th>
+                        <th>% Identified</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+    return section;
 };
 
 const render = () => {
-    const { thumbnail, runs } = loadHistory();
+    const store = loadHistoryStore();
+    const entries = Object.entries(store).filter(([, v]) => v.runs && v.runs.length > 0);
 
-    if (thumbnail) {
-        thumbnailEl.src = `data:image/jpeg;base64,${thumbnail}`;
-        thumbnailEl.classList.remove("hidden");
-    } else {
-        thumbnailEl.classList.add("hidden");
+    videosContainerEl.innerHTML = "";
+    for (const [hash, entry] of entries) {
+        videosContainerEl.appendChild(buildVideoSection(hash, entry));
     }
 
-    tableBodyEl.innerHTML = "";
-    for (const run of runs) {
-        const stats = run.stats || {};
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${new Date(run.timestamp).toLocaleString()}</td>
-            <td>${run.toggles && run.toggles.length ? run.toggles.join(", ") : "none"}</td>
-            <td>${run.people_seen && run.people_seen.length ? run.people_seen.join(", ") : "none"}</td>
-            <td>${stats.detections_captured ?? ""}</td>
-            <td>${stats.mean?.toFixed(4) ?? ""}</td>
-            <td>${stats.min?.toFixed(4) ?? ""}</td>
-            <td>${stats.max?.toFixed(4) ?? ""}</td>
-            <td>${stats.pct_identified?.toFixed(1) ?? ""}%</td>
-        `;
-        tableBodyEl.appendChild(row);
-    }
-
-    const hasRuns = runs.length > 0;
-    noDataHintEl.classList.toggle("hidden", hasRuns);
-    exportButton.disabled = !hasRuns;
-    clearButton.disabled = !hasRuns;
+    const hasData = entries.length > 0;
+    noDataHintEl.classList.toggle("hidden", hasData);
+    exportButton.disabled = !hasData;
+    clearButton.disabled = !hasData;
 };
 
 exportButton.addEventListener("click", async () => {
-    const data = loadHistory();
-    if (!data.runs.length) return;
+    const store = loadHistoryStore();
+    const videos = Object.values(store).filter((v) => v.runs && v.runs.length > 0);
+    if (!videos.length) return;
 
     exportButton.disabled = true;
     try {
         const response = await fetch("/api/benchmark/export", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
+            body: JSON.stringify({ videos }),
         });
         if (!response.ok) {
             showToast(toast, "Export failed", "error", 2000);

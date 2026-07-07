@@ -515,8 +515,21 @@ class FREngine:
                     last_preview_time = now
                     h, w = frame_bgr.shape[:2]
                     scale = min(1.0, PREVIEW_MAX_DIM / max(h, w))
-                    preview = cv2.resize(frame_bgr, (int(w * scale), int(h * scale))) if scale < 1.0 else frame_bgr
-                    _, buffer = cv2.imencode(".jpg", preview, [cv2.IMWRITE_JPEG_QUALITY, 60])
+
+                    # Downscale first, then apply the same whole-frame preprocessing _infer() uses,
+                    # so the preview actually shows what dehaze/low-light enhancement are doing -
+                    # previously this used the raw frame, so enabling those toggles had no visible
+                    # effect on the feed even though they were affecting detection under the hood.
+                    # (Denoise is intentionally excluded - it only ever runs on the cropped face
+                    # used for embeddings, never on the full frame, so it has nothing to preview here.)
+                    preview_rgb = cv2.resize(frame_rgb, (int(w * scale), int(h * scale))) if scale < 1.0 else frame_rgb
+                    if self.fr_settings["use_dehaze"]:
+                        preview_rgb = self.dehaze_enhancer.dehaze(preview_rgb)
+                    if self.fr_settings["use_low_light_enhancement"]:
+                        preview_rgb = self.low_light_enhancer.enhance(preview_rgb)
+
+                    preview_bgr = cv2.cvtColor(preview_rgb, cv2.COLOR_RGB2BGR)
+                    _, buffer = cv2.imencode(".jpg", preview_bgr, [cv2.IMWRITE_JPEG_QUALITY, 60])
                     frame_jpeg = base64.b64encode(buffer).decode("ascii")
 
                 yield json.dumps({

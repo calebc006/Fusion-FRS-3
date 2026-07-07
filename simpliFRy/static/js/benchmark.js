@@ -2,7 +2,6 @@ import { fetchSettings, showToast, updateBBoxes, clearBBoxes } from "./utils.js"
 
 const videoInput = document.getElementById("video-input");
 const runVideoButton = document.getElementById("run-video-button");
-const exportButton = document.getElementById("export-button");
 const settingsSummaryEl = document.getElementById("settings-summary");
 const liveStatusEl = document.getElementById("live-status");
 const resultsEl = document.getElementById("results");
@@ -12,26 +11,48 @@ const videoPlaybackEl = document.getElementById("video-playback");
 const modelSettingsForm = document.getElementById("model-settings-form");
 const historyButton = document.getElementById("history-button");
 
-const HISTORY_STORAGE_KEY = "benchmarkHistory";
+const HISTORY_STORAGE_KEY = "benchmarkHistoryByVideo";
 const MODEL_TOGGLE_NAMES = ["use_low_light_enhancement", "use_dehaze", "use_denoise", "use_lafs"];
 
 let reader = null;
-let currentVideoKey = null; // name+size of the video currently associated with runHistory
-let runHistory = []; // one entry per completed run on the current video, across different model settings
+let currentVideoHash = null; // content hash of the video currently selected
+let historyStore = loadHistoryStore(); // { [videoHash]: { video_name, thumbnail, runs: [] } }
+
+function loadHistoryStore() {
+    try {
+        return JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || {};
+    } catch {
+        return {};
+    }
+}
+
+const persistHistoryStore = () => {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(historyStore));
+};
+
+/** Content hash (SHA-256) of a file's bytes - identifies "the same video" regardless of filename */
+const hashFile = async (file) => {
+    // crypto.subtle only works in secure contexts (HTTPS or localhost) - this app is often
+    // accessed over plain HTTP via a LAN IP for the camera setup, where it's unavailable
+    if (window.crypto?.subtle) {
+        try {
+            const buffer = await file.arrayBuffer();
+            const digest = await crypto.subtle.digest("SHA-256", buffer);
+            return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+        } catch (err) {
+            console.warn("crypto.subtle hashing failed, falling back to file metadata:", err);
+        }
+    }
+    // Fallback: name+size+lastModified isn't content-based, but still recognizes "the same
+    // file" across sessions as long as it isn't re-saved/re-encoded under the same name
+    return `fallback::${file.name}::${file.size}::${file.lastModified}`;
+};
 
 const formatToggles = (settings) => {
     const active = Object.entries(settings)
         .filter(([k, v]) => k.startsWith("use_") && v)
         .map(([k]) => k.replace("use_", ""));
     return active.length ? active.join(", ") : "none";
-};
-
-/** Persists the current run history to localStorage so the /benchmark-history page can read it */
-const persistHistory = () => {
-    localStorage.setItem(
-        HISTORY_STORAGE_KEY,
-        JSON.stringify({ thumbnail: runHistory[0]?.thumbnail || null, runs: runHistory })
-    );
 };
 
 historyButton.addEventListener("click", () => {
@@ -66,20 +87,48 @@ modelSettingsForm.addEventListener("submit", async (e) => {
     }
 });
 
-/** Resets the run history whenever a genuinely different video file is selected */
-const videoKeyFor = (file) => `${file.name}::${file.size}`;
+/** Renders the most recent recorded run for a recognized video, so past results show immediately */
+const showExistingHistory = (hash) => {
+    const entry = historyStore[hash];
+    if (!entry || entry.runs.length === 0) {
+        resultsEl.textContent = "";
+        return;
+    }
 
-videoInput.addEventListener("change", () => {
+    const latest = entry.runs[entry.runs.length - 1];
+    const stats = latest.stats || {};
+    resultsEl.innerHTML = `
+        <p class="benchmark-hint">
+            This video has been benchmarked before - ${entry.runs.length} run(s) recorded.
+            Showing the most recent run below; run again to add another comparison.
+        </p>
+        <h3>Last run: ${latest.people_seen?.join(", ") || "no one identified"}</h3>
+        <table class="results-table">
+            <tr><td>Models used</td><td>${latest.toggles?.length ? latest.toggles.join(", ") : "none"}</td></tr>
+            <tr><td>Detections captured</td><td>${stats.detections_captured ?? ""}</td></tr>
+            <tr><td>Mean distance</td><td>${stats.mean?.toFixed(4) ?? ""}</td></tr>
+            <tr><td>Min distance (best)</td><td>${stats.min?.toFixed(4) ?? ""}</td></tr>
+            <tr><td>Max distance (worst)</td><td>${stats.max?.toFixed(4) ?? ""}</td></tr>
+            <tr><td>% detections identified</td><td>${stats.pct_identified?.toFixed(1) ?? ""}%</td></tr>
+        </table>
+    `;
+    if (entry.thumbnail) {
+        videoPlaybackEl.src = `data:image/jpeg;base64,${entry.thumbnail}`;
+    }
+};
+
+videoInput.addEventListener("change", async () => {
     const file = videoInput.files[0];
     if (!file) return;
-    const key = videoKeyFor(file);
-    if (key !== currentVideoKey) {
-        currentVideoKey = key;
-        runHistory = [];
-        persistHistory();
-        exportButton.disabled = true;
+
+    liveStatusEl.textContent = "Checking video...";
+    currentVideoHash = await hashFile(file);
+    liveStatusEl.textContent = "";
+
+    if (historyStore[currentVideoHash]) {
+        showExistingHistory(currentVideoHash);
+    } else {
         resultsEl.textContent = "";
-        liveStatusEl.textContent = "";
     }
 });
 
@@ -90,10 +139,11 @@ runVideoButton.addEventListener("click", async () => {
         return;
     }
 
-    const key = videoKeyFor(file);
-    if (key !== currentVideoKey) {
-        currentVideoKey = key;
-        runHistory = [];
+    if (!currentVideoHash) {
+        currentVideoHash = await hashFile(file);
+    }
+    if (!historyStore[currentVideoHash]) {
+        historyStore[currentVideoHash] = { video_name: file.name, thumbnail: null, runs: [] };
     }
 
     const settings = await fetchSettings();
@@ -189,11 +239,13 @@ runVideoButton.addEventListener("click", async () => {
         }
     }
 
-    reportResults(scores, namesSeen, threshold, thumbnail, settings);
+    reportResults(scores, namesSeen, threshold, thumbnail, settings, file.name);
     runVideoButton.disabled = false;
 });
 
-const reportResults = (scores, namesSeen, threshold, thumbnail, settings) => {
+const reportResults = (scores, namesSeen, threshold, thumbnail, settings, videoName) => {
+    const entry = historyStore[currentVideoHash];
+
     if (scores.length === 0) {
         liveStatusEl.textContent = "";
         resultsEl.innerHTML = `<p class="no-results">No enrolled face was recognized in this video.</p>`;
@@ -217,12 +269,13 @@ const reportResults = (scores, namesSeen, threshold, thumbnail, settings) => {
             <tr><td>% detections identified (distance &lt; ${threshold})</td><td>${pctIdentified.toFixed(1)}%</td></tr>
         </table>
         <p class="benchmark-hint">People seen: ${[...namesSeen].join(", ")}</p>
-        <p class="benchmark-hint">Run ${runHistory.length + 1} recorded for this video - change a model toggle and run again to compare, or export now.</p>
+        <p class="benchmark-hint">Run ${entry.runs.length + 1} recorded for this video - change a model toggle and run again to compare, or export now.</p>
     `;
 
-    runHistory.push({
+    entry.video_name = entry.video_name || videoName;
+    entry.thumbnail = entry.thumbnail || thumbnail;
+    entry.runs.push({
         timestamp: new Date().toISOString(),
-        thumbnail,
         toggles: formatToggles(settings) === "none" ? [] : formatToggles(settings).split(", "),
         people_seen: [...namesSeen],
         stats: {
@@ -233,41 +286,5 @@ const reportResults = (scores, namesSeen, threshold, thumbnail, settings) => {
             pct_identified: pctIdentified,
         },
     });
-    persistHistory();
-    exportButton.disabled = false;
+    persistHistoryStore();
 };
-
-exportButton.addEventListener("click", async () => {
-    if (runHistory.length === 0) return;
-
-    exportButton.disabled = true;
-    try {
-        const response = await fetch("/api/benchmark/export", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                thumbnail: runHistory[0].thumbnail,
-                runs: runHistory,
-            }),
-        });
-        if (!response.ok) {
-            showToast(toast, "Export failed", "error", 2000);
-            return;
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "benchmark_report.xlsx";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        console.error(err);
-        showToast(toast, "Export failed", "error", 2000);
-    } finally {
-        exportButton.disabled = false;
-    }
-});

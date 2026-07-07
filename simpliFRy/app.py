@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 import signal
 import time
 import atexit
@@ -229,21 +230,14 @@ def benchmark_run():
     return Response(fr_instance.run_video_benchmark(resolved), mimetype="application/json")
 
 
-@app.route("/api/benchmark/export", methods=["POST"])
-def benchmark_export():
-    """
-    API to export a video benchmark's run history as an Excel report - one row per run,
-    so the same video benchmarked repeatedly under different model settings can be compared
-    side-by-side (models used vs. resulting confidence scores).
-    """
-    data = request.get_json(silent=True) or {}
-    runs = data.get("runs") or []
-    thumbnail_b64 = data.get("thumbnail")
+def _sanitize_sheet_name(name: str) -> str:
+    """Excel worksheet titles can't contain : \\ / ? * [ ] and must be <= 31 chars"""
+    cleaned = re.sub(r"[:\\/?*\[\]]", "_", name or "Video").strip() or "Video"
+    return cleaned[:31]
 
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Benchmark Report"
 
+def _write_benchmark_sheet(ws, thumbnail_b64: str | None, runs: list) -> None:
+    """Writes one video's thumbnail + run-history comparison table into the given worksheet"""
     for col, width in {1: 22, 2: 28, 3: 30, 4: 16, 5: 14, 6: 14, 7: 14, 8: 16}.items():
         ws.column_dimensions[get_column_letter(col)].width = width
 
@@ -295,6 +289,31 @@ def benchmark_export():
         for col, value in enumerate(values, start=1):
             ws.cell(row=row, column=col, value=value)
         row += 1
+
+
+@app.route("/api/benchmark/export", methods=["POST"])
+def benchmark_export():
+    """
+    API to export video benchmark run history as an Excel report - one row per run, so the same
+    video benchmarked repeatedly under different model settings can be compared side-by-side
+    (models used vs. resulting confidence scores). If multiple videos are supplied, each gets
+    its own worksheet in the same workbook.
+    """
+    data = request.get_json(silent=True) or {}
+    videos = data.get("videos")
+
+    wb = Workbook()
+
+    if videos:
+        for i, video in enumerate(videos):
+            ws = wb.active if i == 0 else wb.create_sheet()
+            ws.title = _sanitize_sheet_name(video.get("video_name") or f"Video {i + 1}")
+            _write_benchmark_sheet(ws, video.get("thumbnail"), video.get("runs") or [])
+    else:
+        # Legacy single-video shape
+        ws = wb.active
+        ws.title = "Benchmark Report"
+        _write_benchmark_sheet(ws, data.get("thumbnail"), data.get("runs") or [])
 
     buffer = BytesIO()
     wb.save(buffer)
