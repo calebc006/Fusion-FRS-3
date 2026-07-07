@@ -21,6 +21,18 @@ const loadHistoryStore = () => {
     }
 };
 
+const MODEL_DISPLAY_NAMES = {
+    low_light_enhancement: "Zero-DCE",
+    dehaze: "Dehaze",
+    denoise: "Nafnet",
+    lafs: "LAFS",
+};
+
+const formatModelNames = (toggles) =>
+    toggles && toggles.length
+        ? toggles.map((t) => MODEL_DISPLAY_NAMES[t] || t).join(", ")
+        : "None";
+
 const buildVideoSection = (hash, entry) => {
     const section = document.createElement("div");
     section.className = "video-section";
@@ -31,7 +43,7 @@ const buildVideoSection = (hash, entry) => {
             return `
                 <tr>
                     <td>${new Date(run.timestamp).toLocaleString()}</td>
-                    <td>${run.toggles && run.toggles.length ? run.toggles.join(", ") : "none"}</td>
+                    <td>${formatModelNames(run.toggles)}</td>
                     <td>${run.people_seen && run.people_seen.length ? run.people_seen.join(", ") : "none"}</td>
                     <td>${stats.detections_captured ?? ""}</td>
                     <td>${stats.mean?.toFixed(4) ?? ""}</td>
@@ -86,7 +98,15 @@ const render = () => {
 
 exportButton.addEventListener("click", async () => {
     const store = loadHistoryStore();
-    const videos = Object.values(store).filter((v) => v.runs && v.runs.length > 0);
+    const videos = Object.values(store)
+        .filter((v) => v.runs && v.runs.length > 0)
+        .map((v) => ({
+            ...v,
+            runs: v.runs.map((run) => ({
+                ...run,
+                toggles: run.toggles && run.toggles.length ? run.toggles.map((t) => MODEL_DISPLAY_NAMES[t] || t) : [],
+            })),
+        }));
     if (!videos.length) return;
 
     exportButton.disabled = true;
