@@ -35,9 +35,34 @@ body {
     top: 20vh;
     width: 92vw;
     left: 4vw;
+    max-height: 72vh;
+    overflow-y: auto;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     color: black;
     padding-bottom: 3em;
+}
+
+/* Thin, subtle scrollbar for the scrollable history list, matching gotendance's entry-list style */
+.history-container::-webkit-scrollbar {
+    width: 0.6em;
+}
+
+.history-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.history-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 1em;
+}
+
+.history-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.history-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
 }
 
 #videos-container {
