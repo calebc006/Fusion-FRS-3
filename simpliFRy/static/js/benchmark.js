@@ -71,6 +71,15 @@ modelSettingsForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(modelSettingsForm);
 
+    // /api/submit_settings treats a missing checkbox field the same as "unchecked" - since this
+    // form only contains the 4 model toggles, submitting it as-is would silently disable
+    // use_differentiator/use_persistor (and perf_logging) if they were previously on. Explicitly
+    // carry forward their current values so this form only ever changes the model toggles.
+    const currentSettings = await fetchSettings();
+    for (const name of ["use_differentiator", "use_persistor", "perf_logging"]) {
+        if (currentSettings[name]) formData.set(name, "on");
+    }
+
     try {
         const response = await fetch("/api/submit_settings", { method: "POST", body: formData });
         if (!response.ok) {
