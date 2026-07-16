@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../static/css/old-layout.css" />
   </head>
   <body class="bg-image" style="background-image: url('../static/images/SSS_background.png')">
-    <div class="title">FUSION FACIAL RECOGNITION SYSTEM</div>
+    <!-- <div class="title">FUSION FACIAL RECOGNITION SYSTEM</div> -->
 
     <!-- Seatings Menu -->
     <div id="table-menu" style="display: none">
@@ -30,13 +30,6 @@
     </div>
     
     <div class="container">
-      <!-- Video feed goes here -->
-      <div id="video-container">
-        <object id="video-feed" type="image/jpeg">
-          <img src="../static/images/default.jpg" alt="default video image" />
-        </object>
-      </div>
-  
       <!-- Detection list goes here -->
       <div class="detection-container">
         <div class="detection-list" id="detection-list"></div>
@@ -50,10 +43,27 @@
       <img class="fusion-logo" src="../static/images/fusionlogo.png" />
     </div>
 
+    <!-- Video Modal -->
+    <div id="video-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Video Feed</h2>
+          <button id="close-video-modal" class="modal-close">×</button>
+        </div>
+        <div id="video-container">
+          <object id="video-feed" type="image/jpeg">
+            <img src="../static/images/default.jpg" alt="default video image" />
+          </object>
+        </div>
+      </div>
+    </div>
+
     <!-- Bottom Taskbar -->
     <div class="taskbar-placeholder">
       <div class="taskbar">
         <button id="home-button">Home</button>
+        <button id="open-video-modal-button">Open Video</button>
       </div>
     </div>
 

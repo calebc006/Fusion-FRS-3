@@ -8,22 +8,43 @@ import {
 } from "./utils.js";
 
 const detectionList = document.getElementById("detection-list");
+const videoModal = document.getElementById("video-modal");
 let namelistJSON = undefined;
 
 let HOLD_TIME = 100;
 fetchSettings().then(settings => {
-    HOLD_TIME = settings.holding_time * 1000; 
+    HOLD_TIME = settings.holding_time * 1000;
 });
 const activeDetections = new Map(); // name -> { lastSeen, detection }
 
 window.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("video-feed").setAttribute("data", `/api/vidFeed?t=${Date.now()}`);
     let namelistPath = localStorage.getItem("namelistPath");
 
     loadNamelistJSON(namelistPath).then((data) => {
         namelistJSON = data;
         fetchDetections();
     });
+});
+
+// -------- VIDEO MODAL (video feed is hidden by default, opened on demand) ----------
+
+const showVideoModal = () => {
+    videoModal.classList.remove("hidden");
+    document.getElementById("video-feed").setAttribute("data", `/api/vidFeed?t=${Date.now()}`);
+};
+
+const hideVideoModal = () => {
+    videoModal.classList.add("hidden");
+    document.getElementById("video-feed").removeAttribute("data");
+};
+
+document.getElementById("open-video-modal-button")?.addEventListener("click", showVideoModal);
+document.getElementById("close-video-modal")?.addEventListener("click", hideVideoModal);
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !videoModal.classList.contains("hidden")) {
+        hideVideoModal();
+    }
 });
 
 // MAIN LOOP
@@ -67,8 +88,10 @@ const fetchDetections = () => {
 
                     buffer = parts[parts.length - 1] || "";
 
-                    const videoContainer = document.getElementById("video-container");
-                    updateBBoxes(videoContainer, data, { showLabels: false, showUnknown: true });
+                    if (!videoModal.classList.contains("hidden")) {
+                        const videoContainer = document.getElementById("video-container");
+                        updateBBoxes(videoContainer, data, { showLabels: false, showUnknown: true });
+                    }
                     updateDetectionList(data);
 
                     // Recursive call
