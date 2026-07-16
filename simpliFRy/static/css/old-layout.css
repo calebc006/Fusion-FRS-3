@@ -60,8 +60,17 @@ body {
 }
 
 .title{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    top: 0;
+    padding: 50px;
+    gap: 100px;
+}
+
+.text {
     text-align: center;
-    margin-top: -10px;
     color: black;
     font-family: Arial, sans-serif;
 }
@@ -79,4 +88,9 @@ body {
     font-weight: 1000;
     text-transform: uppercase;
     line-height: 1;
+}
+
+.title .logo{
+
+    width: 180px;
 }
