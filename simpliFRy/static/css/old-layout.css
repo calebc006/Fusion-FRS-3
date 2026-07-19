@@ -122,6 +122,21 @@ body {
     padding: 0;
 }
 
+.flex-container-logo {
+    position: absolute;
+    top: auto;
+    bottom: 9%;
+    left: auto;
+    right: 5%;
+    height: 8.5vh;
+    opacity: 100%;
+}
+
+.flex-container-logo img {
+    height: 8.5vh;
+    width: auto;
+}
+
 .detection-element {
     max-width: 35vw;
     font-family: Helvetica, sans-serif;
